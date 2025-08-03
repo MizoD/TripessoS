@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -23,13 +23,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\" />
+    <ProjectReference Include="..\DataAccess\DataAccess.csproj" />
+    <ProjectReference Include="..\Models\Models.csproj" />
+    <ProjectReference Include="..\Utility\Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\TripessoSol\DataAccess\DataAccess.csproj" />
-    <ProjectReference Include="..\..\TripessoSol\Models\Models.csproj" />
-    <ProjectReference Include="..\..\TripessoSol\Utility\Utility.csproj" />
+    <Folder Include="Areas\Admin\" />
+    <Folder Include="Areas\Customer\" />
   </ItemGroup>
 
 </Project>

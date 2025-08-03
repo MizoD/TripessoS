@@ -39,6 +39,7 @@ namespace Utility.DbInitializer
                     UserName = "SuperAdmin",
                     Email = "SuperAdmin@Tourism.com",
                     EmailConfirmed = true,
+                    RegistraionDate = DateTime.Now,
                 }, "Crazy@Admin7").GetAwaiter().GetResult(); ;
 
                 var user = _userManager.FindByNameAsync("SuperAdmin").GetAwaiter().GetResult();
