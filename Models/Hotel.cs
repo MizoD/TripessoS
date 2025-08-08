@@ -1,0 +1,13 @@
+﻿namespace Models
+{
+    public class Hotel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Phone { get; set; } = null!;
+        public int CountryId { get; set; }
+        public Event Country { get; set; } = null!;
+        public int TripId { get; set; }
+        public Trip? Trip { get; set; }
+    }
+}

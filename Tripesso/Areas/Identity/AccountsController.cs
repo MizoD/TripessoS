@@ -109,7 +109,7 @@ namespace Tripesso.Areas.Identity
                 var signInCredential = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
 
                 var token = new JwtSecurityToken(
-                    issuer: "https://localhost:7072",
+                    issuer: "https://localhost:7200",
                     audience: "https://localhost:4200,https://localhost:5000",
                     claims: claims,
                     expires: DateTime.UtcNow.AddHours(3),

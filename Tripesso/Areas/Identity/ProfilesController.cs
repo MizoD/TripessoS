@@ -72,6 +72,7 @@ namespace BookStore.Areas.Identity.Controllers
             await unitOfWork.UserManager.UpdateAsync(upuser);
             return Ok("User Updated Succssefully");
         }
+        [HttpGet("Bookings")]
         public async Task<IActionResult> Bookings()
         {
             var user = await unitOfWork.UserManager.GetUserAsync(User);

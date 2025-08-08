@@ -37,7 +37,17 @@ namespace Tripesso
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IApplicationUserOTPRepository, ApplicationUserOTPRepository>();
-
+            builder.Services.AddScoped<IAirCraftRepository, AirCraftRepository>();
+            builder.Services.AddScoped<IAirportRepository, AirportRepository>();
+            builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+            builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+            builder.Services.AddScoped<IEventRepository, EventRepository>();
+            builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+            builder.Services.AddScoped<IHotelRepository, HotelRepository>();
+            builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+            builder.Services.AddScoped<ISeatRepository, SeatRepository>();
+            builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+            builder.Services.AddScoped<ITripRepository, TripRepository>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             builder.Services.AddAuthorization();
