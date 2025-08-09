@@ -27,10 +27,10 @@ namespace Utility.DbInitializer
             if (!_roleManager.Roles.Any() && !_userManager.Users.Any())
             {
                 _roleManager.CreateAsync(new(SD.SuperAdmin)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new(SD.Admin)).GetAwaiter().GetResult(); ;
-                _roleManager.CreateAsync(new(SD.Employee)).GetAwaiter().GetResult(); ;
-                _roleManager.CreateAsync(new(SD.Company)).GetAwaiter().GetResult(); ;
-                _roleManager.CreateAsync(new(SD.Customer)).GetAwaiter().GetResult(); ;
+                _roleManager.CreateAsync(new(SD.Admin)).GetAwaiter().GetResult(); 
+                _roleManager.CreateAsync(new(SD.Employee)).GetAwaiter().GetResult(); 
+                _roleManager.CreateAsync(new(SD.Company)).GetAwaiter().GetResult(); 
+                _roleManager.CreateAsync(new(SD.Customer)).GetAwaiter().GetResult(); 
 
                 _userManager.CreateAsync(new()
                 {
@@ -40,7 +40,7 @@ namespace Utility.DbInitializer
                     Email = "SuperAdmin@Tourism.com",
                     EmailConfirmed = true,
                     RegistraionDate = DateTime.Now,
-                }, "Crazy@Admin7").GetAwaiter().GetResult(); ;
+                }, "Crazy@Admin7").GetAwaiter().GetResult(); 
 
                 var user = _userManager.FindByNameAsync("SuperAdmin").GetAwaiter().GetResult();
                 if (user is not null)
