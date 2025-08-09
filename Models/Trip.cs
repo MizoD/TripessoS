@@ -1,12 +1,49 @@
-﻿namespace Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Models
 {
     public class Trip
     {
         public int Id { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public decimal TotalPrice { get; set; }
-        public List<Hotel> Hotels { get; set; } = new List<Hotel>();
-        public List<Flight> Flights { get; set; } = new List<Flight>();
-        public List<Event> Events { get; set; } = new List<Event>();
+
+        [Required(ErrorMessage = "Title is required.")]
+        [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
+        public string? Title { get; set; }
+
+        [Required(ErrorMessage = "Description is required.")]
+        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
+        public string? Description { get; set; }
+
+        [Required(ErrorMessage = "Country is required.")]
+        public int CountryId { get; set; }
+        public Country? Country { get; set; }
+        [Url]
+        [StringLength(300)]
+        public string? ImageUrl { get; set; }
+        [NotMapped]
+        public int DurationDays => (EndDate - StartDate).Days;
+
+        [Required(ErrorMessage = "Start date is required.")]
+        public DateTime StartDate { get; set; }
+
+        [Required(ErrorMessage = "End date is required.")]
+        public DateTime EndDate { get; set; }
+
+        [Required(ErrorMessage = "Total seats are required.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Total seats must be at least 1.")]
+        public int TotalSeats { get; set; }
+
+        [Required(ErrorMessage = "Available seats are required.")]
+        [Range(0, int.MaxValue, ErrorMessage = "Available seats cannot be negative.")]
+        public int AvailableSeats { get; set; }
+
+        [Required(ErrorMessage = "Price is required.")]
+        [Range(0, 999999, ErrorMessage = "Price must be between 0 and 999999.")]
+        public decimal Price { get; set; }
+        public bool IsAvailable => AvailableSeats > 0;
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<Cart>? Carts { get; set; }
+        public ICollection<Wishlist>? Wishlists { get; set; }
     }
 }
