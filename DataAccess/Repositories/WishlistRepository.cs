@@ -10,8 +10,25 @@ namespace DataAccess.Repositories
 {
     public class WishlistRepository : Repository<Wishlist> , IWishlistRepository
     {
+        private readonly ApplicationDbContext _context;
+
         public WishlistRepository(ApplicationDbContext context) : base(context)
         {
+            _context = context;
+        }
+        public IEnumerable<Wishlist> GetAll()
+        {
+            return _context.Wishlists.ToList();
+        }
+
+        public void Add(Wishlist wishlist)
+        {
+            _context.Wishlists.Add(wishlist);
+        }
+
+        public void Save()
+        {
+            _context.SaveChanges();
         }
     }
 }

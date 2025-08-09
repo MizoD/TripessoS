@@ -10,5 +10,7 @@ namespace Models
         public string? Name { get; set; }
 
         public ICollection<Trip>? Trips { get; set; }
+        public ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
+
     }
 }

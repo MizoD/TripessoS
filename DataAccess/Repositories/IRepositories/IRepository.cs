@@ -4,20 +4,36 @@ namespace DataAccess.Repositories.IRepositories
 {
     public interface IRepository<T> where T : class
     {
-        
         Task<bool> CreateAsync(T entity);
-
         Task<bool> UpdateAsync(T entity);
-
         Task<bool> DeleteAsync(T entity);
 
-        Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>>? expression = null, Func<IQueryable<T>, IQueryable<T>>? includes = null, bool tracked = true);
+        Task<IEnumerable<T>> GetAsync(
+            Expression<Func<T, bool>>? expression = null,
+            Func<IQueryable<T>, IQueryable<T>>? includes = null,
+            bool tracked = true
+        );
 
-        Task<T?> GetOneAsync(Expression<Func<T, bool>>? expression = null, Func<IQueryable<T>, IQueryable<T>>? includes = null, bool tracked = true);
+        Task<T?> GetOneAsync(
+            Expression<Func<T, bool>>? expression = null,
+            Func<IQueryable<T>, IQueryable<T>>? includes = null,
+            bool tracked = true
+        );
+
         Task<IEnumerable<T>> GetAllAsync(
-        Expression<Func<T, bool>>? filter = null,
-        Func<IQueryable<T>, IQueryable<T>>? includes = null,
-        bool tracked = true);
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IQueryable<T>>? includes = null,
+            bool tracked = true
+        );
+
+        Task<T?> GetFirstOrDefaultAsync( 
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IQueryable<T>>? includes = null,
+            bool tracked = true
+        );
+        Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+
+
         Task<bool> CommitAsync();
     }
 }

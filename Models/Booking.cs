@@ -8,9 +8,13 @@
         public string PaymentMethod { get; set; } = null!;
         public int ApplicationUserId { get; set; }
         public ApplicationUser User { get; set; } = null!;
+        public int RoomId { get; set; }
+        public DateTime CheckInDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
 
         public ICollection<Trip> Trips { get; set; } = new List<Trip>();
         public ICollection<Flight> Flights { get; set; } = new List<Flight>();
         public ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
+        public ICollection<Room> Rooms { get; set; } = new List<Room>();
     }
 }

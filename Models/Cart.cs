@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Models
 {
@@ -15,13 +11,25 @@ namespace Models
         public string? UserId { get; set; }
         public ApplicationUser? User { get; set; }
 
-        [Required]
-        public int TripId { get; set; }
+        public int? TripId { get; set; }
         public Trip? Trip { get; set; }
-
-        [Required, Range(1, int.MaxValue, ErrorMessage = "Must book at least 1 passenger.")]
         public int NumberOfPassengers { get; set; }
 
+
+        public int? HotelId { get; set; }
+        public Hotel? Hotel { get; set; }
+
+        public int? RoomId { get; set; }
+        public Room? Room { get; set; }
+
+        [Required, Range(1, int.MaxValue)]
+        public int Quantity { get; set; }
+        public DateTime CheckInDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
+        public int NumberOfGuests { get; set; }
+
         public DateTime AddedAt { get; set; } = DateTime.Now;
+        public ICollection<CartItem>? Items { get; set; }
+
     }
 }

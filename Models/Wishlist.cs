@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Models
 {
@@ -15,10 +11,17 @@ namespace Models
         public string? UserId { get; set; }
         public ApplicationUser? User { get; set; }
 
-        [Required]
-        public int TripId { get; set; }
+        public int? TripId { get; set; }
         public Trip? Trip { get; set; }
 
+        public int? RoomId { get; set; }
+        public Room? Room { get; set; }
+
+        public int? HotelId { get; set; }
+        public Hotel? Hotel { get; set; }
+
         public DateTime AddedAt { get; set; } = DateTime.Now;
+        public ICollection<WishlistItem>? Items { get; set; }
+
     }
 }

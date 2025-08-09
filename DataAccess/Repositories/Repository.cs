@@ -104,10 +104,28 @@ namespace DataAccess.Repositories
                 return false;
             }
         }
+        public async Task<T?> GetFirstOrDefaultAsync(
+    Expression<Func<T, bool>>? filter = null,
+    Func<IQueryable<T>, IQueryable<T>>? includes = null,
+    bool tracked = true)
+        {
+            IQueryable<T> query = _db;
+
+            if (!tracked)
+                query = query.AsNoTracking();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (includes != null)
+                query = includes(query);
+
+            return await query.FirstOrDefaultAsync();
+        }
         public async Task<IEnumerable<T>> GetAllAsync(
-Expression<Func<T, bool>>? filter = null,
-Func<IQueryable<T>, IQueryable<T>>? includes = null,
-bool tracked = true)
+        Expression<Func<T, bool>>? filter = null,
+        Func<IQueryable<T>, IQueryable<T>>? includes = null,
+        bool tracked = true)
         {
             IQueryable<T> query = _db;
 
@@ -122,6 +140,13 @@ bool tracked = true)
 
             return await query.ToListAsync();
         }
+
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _db.AnyAsync(predicate);
+        }
+
+
     }
 }
 
