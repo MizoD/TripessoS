@@ -23,5 +23,10 @@ namespace Models
         public int NumberOfPassengers { get; set; }
 
         public DateTime AddedAt { get; set; } = DateTime.Now;
+
+        public static implicit operator Cart(Cart v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.DTOs.Request.TripRequest;
 using Models.DTOs.Response.TripResponse;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace Tripesso.Areas.Customer.Controllers
 {
@@ -18,6 +20,7 @@ namespace Tripesso.Areas.Customer.Controllers
         private readonly ICartRepository _cartRepository;
         private readonly IWishlistRepository _wishlistRepository;
         private readonly IReviewRepository _reviewRepository;
+
 
 
         public TripController(
@@ -409,8 +412,136 @@ namespace Tripesso.Areas.Customer.Controllers
 
             return Ok(result);
         }
+        //Get(index)
+        //-list of flights
+        //-pagination to show only 6 items per page
+        [HttpGet]
+        public async Task<IActionResult> Index([FromQuery] int page = 1)
+        {
+            const int pageSize = 6;
+            if (page < 1) page = 1;
+
+            var (trips, totalCount) = await _tripRepository.GetPagedTripsAsync(page, pageSize);
+
+            return Ok(new
+            {
+                CurrentPage = page,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                TotalCount = totalCount,
+                Trips = trips
+            });
+        }
+
+        //Flight details
+        [HttpGet("details/{id}")]
+        public async Task<IActionResult> GetFlightDetails(int id)
+        {
+            var (flight, relatedFlights) = await _tripRepository.GetFlightDetailsWithRelatedAsync(id);
+            if (flight == null)
+                return NotFound(new { message = "Flight not found" });
+
+            return Ok(new
+            {
+                Flight = flight,
+                RelatedFlights = relatedFlights
+            });
+        }
+        //Add to cart
+        [HttpPost("addtocart")]
+        public async Task<IActionResult> AddToCart([FromBody] Cart model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User is not logged in.");
+
+            model.UserId = userId;
+            bool available = await _cartRepository.FlightExistsAndAvailableAsync(
+                new Guid(model.TripId.ToString()),
+                model.NumberOfPassengers
+            );
+
+            if (!available)
+                return BadRequest("Trip does not exist or not enough seats available.");
+            await _cartRepository.AddAsync(model);
+            await _cartRepository.SaveAsync();
+
+            return Ok(new { message = "Trip added to cart successfully." });
+        }
+        // Flight search
+        //-search by country or airport name
+        //-date range filter
+        //-number of passengers
+        [HttpGet("flightsearch")]
+        public async Task<IActionResult> FlightSearch(string searchTerm, DateTime flyingFromDate, DateTime flyingToDate, int numberOfPassengers)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return BadRequest("Search term is required.");
+
+            if (numberOfPassengers < 1)
+                return BadRequest("Number of passengers must be at least 1.");
+
+            // Fetch flights
+            var flights = await _context.Trips
+                .Include(f => f.DepartureAirport)
+                .Include(f => f.ArrivalAirport)
+                .Where(f =>
+                    // Match country or airport name
+                    f.DepartureAirport.Country.Contains(searchTerm) ||
+                    f.DepartureAirport.Name.Contains(searchTerm) ||
+                    f.ArrivalAirport.Country.Contains(searchTerm) ||
+                    f.ArrivalAirport.Name.Contains(searchTerm))
+                .Where(f =>
+                    // Date range filter
+                    f.FlyingFromDate.Date >= flyingFromDate.Date &&
+                    f.FlyingToDate.Date <= flyingToDate.Date)
+                .Where(f =>
+                    // Passenger availability
+                    f.AvailableSeats >= numberOfPassengers)
+                .ToListAsync();
+
+            if (!flights.Any())
+                return NotFound("No flights found for the given criteria.");
+
+            return Ok(flights);
+        }
+
+        // GET /flightsearch
+        [HttpGet("flightsearch")]
+        public async Task<IActionResult> FlightSearchGet(
+            [FromQuery] string searchTerm, 
+            [FromQuery] DateTime flyingFrom,
+            [FromQuery] DateTime flyingTo,
+            [FromQuery] int passengers)
+        {
+            var flights = await _tripRepository.SearchAvailableFlightsAsync(
+                searchTerm, flyingFrom, flyingTo, passengers);
+
+            if (!flights.Any())
+                return NotFound("No available flights match your criteria.");
+
+            return Ok(flights);
+        }
+        [HttpPost("flightsearch")]
+        public IActionResult FlightSearchPost([FromBody] Flight flight)
+        {
+            if (flight == null)
+                return BadRequest("Invalid search parameters.");
+
+            return RedirectToAction(nameof(FlightSearchGet), new
+            {
+                searchTerm = flight.SearchTerm,
+                flyingFrom = flight.FlyingFrom,
+                flyingTo = flight.FlyingTo,
+                passengers = flight.Passengers
+            });
+        }
 
 
     }
 }
+
+
 

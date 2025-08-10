@@ -16,8 +16,7 @@ namespace DataAccess
         public DbSet<Cart> Carts { get; set; }
         public DbSet<Wishlist> Wishlists { get; set; }
         public DbSet<Country> Countries { get; set; }
-        public DbSet<ApplicationUser> Users { get; set; } 
-
+        public DbSet<ApplicationUser> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

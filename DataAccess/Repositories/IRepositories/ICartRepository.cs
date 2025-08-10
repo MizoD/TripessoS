@@ -9,5 +9,8 @@ namespace DataAccess.Repositories.IRepositories
 {
     public interface ICartRepository : IRepository<Cart>
     {
+        Task AddAsync(Cart cartItem);
+        Task<bool> FlightExistsAndAvailableAsync(Guid flightId, int quantity);
+        Task SaveAsync();
     }
 }

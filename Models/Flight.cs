@@ -18,5 +18,9 @@
         public AirCraft Aircraft { get; set; } = null!;
         public int TripId { get; set; }
         public Trip? Trip { get; set; }
+        public object SearchTerm { get; set; }
+        public object FlyingFrom { get; set; }
+        public object FlyingTo { get; set; }
+        public object Passengers { get; set; }
     }
 }

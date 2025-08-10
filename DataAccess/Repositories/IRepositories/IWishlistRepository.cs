@@ -9,5 +9,8 @@ namespace DataAccess.Repositories.IRepositories
 {
     public interface IWishlistRepository : IRepository<Wishlist>
     {
+        Task AddAsync(Wishlist model);
+        Task GetFirstOrDefaultAsync(Func<object, bool> value);
+        Task SaveAsync();
     }
 }
