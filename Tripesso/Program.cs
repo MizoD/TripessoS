@@ -86,6 +86,15 @@ namespace Tripesso
                     ValidateLifetime = true
                 };
             });
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5500") // your HTML server origin
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
             var app = builder.Build();
 
@@ -102,7 +111,7 @@ namespace Tripesso
             app.UseAuthentication();
             app.UseAuthorization();
 
-
+            app.UseCors("AllowFrontend");
             app.MapControllers();
 
             using (var scope = app.Services.CreateScope())

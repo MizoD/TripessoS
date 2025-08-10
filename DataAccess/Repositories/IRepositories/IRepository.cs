@@ -14,7 +14,10 @@ namespace DataAccess.Repositories.IRepositories
         Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>>? expression = null, Func<IQueryable<T>, IQueryable<T>>? includes = null, bool tracked = true);
 
         Task<T?> GetOneAsync(Expression<Func<T, bool>>? expression = null, Func<IQueryable<T>, IQueryable<T>>? includes = null, bool tracked = true);
-
+        Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? filter = null,
+        Func<IQueryable<T>, IQueryable<T>>? includes = null,
+        bool tracked = true);
         Task<bool> CommitAsync();
     }
 }

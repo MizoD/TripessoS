@@ -95,8 +95,11 @@ namespace Tripesso.Areas.Identity
                 {
                     return BadRequest($"You have been blocked untill {user.LockoutEnd}");
                 }
-                var roles = await unitOfWork.UserManager.GetRolesAsync(user);
+                user.LastLogin = DateTime.Now;
+                await unitOfWork.CommitAsync();
 
+                var roles = await unitOfWork.UserManager.GetRolesAsync(user);
+                
                 var claims = new List<Claim> {
                         new Claim(ClaimTypes.NameIdentifier, user.Id),
                         new Claim(ClaimTypes.Name, user.UserName!),
