@@ -6,7 +6,7 @@ namespace DataAccess.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class
     {
-        private readonly ApplicationDbContext _context;
+        protected readonly ApplicationDbContext _context;
         private DbSet<T> _db { set; get; }
 
         public Repository(ApplicationDbContext context)
@@ -104,5 +104,24 @@ namespace DataAccess.Repositories
                 return false;
             }
         }
+        public async Task<IEnumerable<T>> GetAllAsync(
+Expression<Func<T, bool>>? filter = null,
+Func<IQueryable<T>, IQueryable<T>>? includes = null,
+bool tracked = true)
+        {
+            IQueryable<T> query = _db;
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (includes != null)
+                query = includes(query);
+
+            if (!tracked)
+                query = query.AsNoTracking();
+
+            return await query.ToListAsync();
+        }
     }
 }
+
