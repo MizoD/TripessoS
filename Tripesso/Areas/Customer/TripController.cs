@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.DTOs.Request.TripRequest;
 using Models.DTOs.Response.TripResponse;
+using System.Security.Claims;
 
 namespace Tripesso.Areas.Customer.Controllers
 {
@@ -12,28 +12,10 @@ namespace Tripesso.Areas.Customer.Controllers
     [Area("Customer")]
     public class TripController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ITripRepository _tripRepository;
-        private readonly ApplicationDbContext _context;
-        private readonly ICartRepository _cartRepository;
-        private readonly IWishlistRepository _wishlistRepository;
-        private readonly IReviewRepository _reviewRepository;
-
-
-        public TripController(
-           UserManager<ApplicationUser> userManager,
-           ITripRepository tripRepository,
-           ICartRepository cartRepository,
-           IWishlistRepository wishlistRepository,
-           IReviewRepository reviewRepository,
-           ApplicationDbContext context)
+        private readonly IUnitOfWork unitOfWork;
+        public TripController(IUnitOfWork unitOfWork)
         {
-            _userManager = userManager;
-            _tripRepository = tripRepository;
-            _context = context;
-            _cartRepository = cartRepository;
-            _wishlistRepository = wishlistRepository;
-            _reviewRepository = reviewRepository;
+            this.unitOfWork = unitOfWork;
         }
 
         [HttpGet("index")]
@@ -41,82 +23,47 @@ namespace Tripesso.Areas.Customer.Controllers
         {
             const int pageSize = 6;
 
-            var allTrips = await _tripRepository.GetAllAvailableTripsAsync();
+            var allTrips = await unitOfWork.TripRepository.GetAllAvailableTripsAsync();
 
+            int tripsCount = allTrips.Count();
             var pagedTrips = allTrips
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .Select(t => new TripListResponse
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    CountryName = t.Country.Name,
-                    StartDate = t.StartDate,
-                    Price = t.Price,
-                    ImageUrl = t.ImageUrl,
-                    DurationDays = t.DurationDays,
-                    IsAvailable = t.IsAvailable,
-                    AverageRating = t.Reviews.Any() ? t.Reviews.Average(r => r.Rating) : 0
-                })
                 .ToList();
 
-            return Ok(pagedTrips);
+            var tripHome = new { PagedTrips = pagedTrips, CurrentPage = pageNumber, TotalPages = (int)Math.Ceiling((double)tripsCount / pageSize)};
+            return Ok(tripHome);
         }
 
-        [HttpGet("tripdetails/{id}")]
-        public async Task<IActionResult> GetTripDetails(int id)
+        [HttpGet("TripDetails/{id}")]
+        public async Task<IActionResult> TripDetails(int id)
         {
-            var trip = await _tripRepository.GetTripWithDetailsAsync(id);
+            var trip = await unitOfWork.TripRepository.GetTripWithDetailsAsync(id);
             if (trip == null)
                 return NotFound("Trip not found");
 
-            var relatedTrips = await _tripRepository.GetRelatedTripsAsync(trip);
+            var relatedTrips = await unitOfWork.TripRepository.GetRelatedTripsAsync(trip);
 
-            var tripDetailsDto = new TripDetailsResponse
+            var tripDetails = new 
             {
-                Id = trip.Id,
-                Title = trip.Title,
-                Description = trip.Description,
-                CountryName = trip.Country.Name,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
-                Price = trip.Price,
-                ImageUrl = trip.ImageUrl,
-                DurationDays = (trip.EndDate - trip.StartDate).Days,
-                IsAvailable = trip.AvailableSeats > 0,
-
-                RelatedTrips = relatedTrips.Select(t => new TripListResponse
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    CountryName = t.Country.Name,
-                    StartDate = t.StartDate,
-                    Price = t.Price,
-                    ImageUrl = t.ImageUrl,
-                    DurationDays = (t.EndDate - t.StartDate).Days,
-                    IsAvailable = t.AvailableSeats > 0,
-                    AverageRating = t.Reviews.Any() ? t.Reviews.Average(r => r.Rating) : 0
-                }).ToList(),
-
-                Reviews = trip.Reviews.Select(r => new ReviewResponse
-                {
-                    ReviewId = r.Id,
-                    UserName = r.User.UserName,
-                    Rating = r.Rating,
-                    Comment = r.Comment,
-                    CreatedAt = r.CreatedAt
-                }).ToList()
+                Trip = trip,
+                RelatedTrips = relatedTrips
             };
-
-            return Ok(tripDetailsDto);
+            return Ok(tripDetails);
         }
-        [HttpPost("addtocart")]
+        [HttpPost("AddToCart")]
         public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var user = await unitOfWork.UserManager.GetUserAsync(User);
+            if (user is null)
+            {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                user = await unitOfWork.UserManager.FindByIdAsync(userId);
+            }
+            if (user == null)
+                return Unauthorized();
 
-            var trip = await _tripRepository.GetOneAsync(t => t.Id == request.TripId);
+            var trip = await unitOfWork.TripRepository.GetOneAsync(t => t.Id == request.TripId);
 
             if (trip == null)
                 return NotFound("Trip not found.");
@@ -124,117 +71,85 @@ namespace Tripesso.Areas.Customer.Controllers
             if (trip.AvailableSeats < request.NumberOfPassengers)
                 return BadRequest("Not enough available seats.");
 
-            var userId = User.FindFirst("sub")?.Value;
-            if (userId == null)
-                return Unauthorized();
-
-            // Check if the trip is already in the user's cart
-            var existingCartItem = await _cartRepository.GetOneAsync(
-                c => c.UserId == userId && c.TripId == request.TripId
+            // Checks if the trip is already in the user's cart
+            var existingCartItem = await unitOfWork.TripCartRepository.GetOneAsync(
+                c => c.UserId == user.Id && c.TripId == request.TripId
             );
 
-            if (existingCartItem != null)
-                return BadRequest("This trip is already in your cart.");
+            if (existingCartItem != null) { 
+                existingCartItem.NumberOfPassengers++;
+            }    
+            else {
+                var cartItem = new TripCart
+                {
+                    TripId = trip.Id,
+                    UserId = user.Id,
+                    NumberOfPassengers = request.NumberOfPassengers,
+                    AddedAt = DateTime.UtcNow
+                };
 
-            var cartItem = new Cart
-            {
-                TripId = trip.Id,
-                UserId = userId,
-                NumberOfPassengers = request.NumberOfPassengers,
-                AddedAt = DateTime.UtcNow
-            };
-
-            var added = await _cartRepository.CreateAsync(cartItem);
-            if (!added)
-                return StatusCode(500, "Something went wrong while adding to cart.");
-
-            // Update available seats
-            trip.AvailableSeats -= request.NumberOfPassengers;
-            await _tripRepository.UpdateAsync(trip);
-
-            // response
-            var response = new AddToCartResponse
-            {
-                CartId = cartItem.Id,
-                TripId = trip.Id,
-                TripTitle = trip.Title,
-                NumberOfPassengers = request.NumberOfPassengers,
-                TotalPrice = trip.Price * request.NumberOfPassengers,
-                AddedAt = cartItem.AddedAt
-            };
-
-            return Ok(response);
+                var added = await unitOfWork.TripCartRepository.CreateAsync(cartItem);
+                if (!added)
+                    return StatusCode(500, "Something went wrong while adding to cart.");
+            }
+               
+            await unitOfWork.CommitAsync();
+            return Ok();
         }
 
-        [HttpPost("addtowishlist")]
+        [HttpPost("AddToWishlist")]
         public async Task<IActionResult> AddToWishlist([FromBody] AddToWishlistRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
-            var userId = User.FindFirst("sub")?.Value;
-            if (userId == null)
+            var user = await unitOfWork.UserManager.GetUserAsync(User);
+            if (user is null)
+            {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                user = await unitOfWork.UserManager.FindByIdAsync(userId);
+            }
+            if (user == null)
                 return Unauthorized();
 
-            var trip = await _tripRepository.GetOneAsync(
-                t => t.Id == request.TripId,
-                includes: q => q.Include(t => t.Country)
-            );
+            var trip = await unitOfWork.TripRepository.GetOneAsync(t => t.Id == request.TripId);
 
             if (trip == null)
                 return NotFound("Trip not found.");
 
             // Check if it's already in wishlist
-            var existingWishlistItem = await _wishlistRepository.GetOneAsync(
-                w => w.UserId == userId && w.TripId == request.TripId
+            var existingWishlistItem = await unitOfWork.TripWishlistRepository.GetOneAsync(
+                w => w.UserId == user.Id && w.TripId == request.TripId
             );
 
             if (existingWishlistItem != null)
                 return BadRequest("This trip is already in your wishlist.");
 
-            var wishlistItem = new Wishlist
+            var wishlistItem = new TripWishlist
             {
                 TripId = request.TripId,
-                UserId = userId,
+                UserId = user.Id,
                 AddedAt = DateTime.UtcNow
             };
 
-            var added = await _wishlistRepository.CreateAsync(wishlistItem);
+            var added = await unitOfWork.TripWishlistRepository.CreateAsync(wishlistItem);
             if (!added)
                 return StatusCode(500, "Something went wrong while adding to wishlist.");
 
-            var response = new AddToWishlistResponse
-            {
-                WishlistId = wishlistItem.Id,
-                TripId = trip.Id,
-                TripTitle = trip.Title,
-                CountryName = trip.Country.Name,
-                Price = trip.Price,
-                ImageUrl = trip.ImageUrl,
-                AddedAt = wishlistItem.AddedAt
-            };
-
-            return Ok(response);
+            return Ok();
         }
 
-        [HttpPost("review")]
+        [HttpPost("Review")]
         public async Task<IActionResult> AddReview([FromBody] AddReviewRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = User.FindFirst("sub")?.Value;
-            if (userId == null)
-                return Unauthorized();
-
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await unitOfWork.UserManager.GetUserAsync(User);
+            if (user is null)
+            {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                user = await unitOfWork.UserManager.FindByIdAsync(userId);
+            }
             if (user == null)
                 return Unauthorized();
 
-            var trip = await _tripRepository.GetOneAsync(
-                t => t.Id == request.TripId,
-                includes: q => q.Include(t => t.Reviews)
-            );
+            var trip = await unitOfWork.TripRepository.GetOneAsync(t => t.Id == request.TripId, includes: t=> t.Include(t=> t.Reviews));
 
             if (trip == null)
                 return NotFound("Trip not found.");
@@ -242,60 +157,48 @@ namespace Tripesso.Areas.Customer.Controllers
             if (trip.AvailableSeats == 0)
                 return BadRequest("Trip is not available for review.");
 
-            // Optional: Check if user already reviewed this trip
-            var alreadyReviewed = trip.Reviews.Any(r => r.UserId == userId);
+            // Check if user already reviewed this trip
+            var alreadyReviewed = trip.Reviews.Any(r => r.UserId == user.Id);
             if (alreadyReviewed)
                 return BadRequest("You have already reviewed this trip.");
 
             var review = new Review
             {
                 TripId = trip.Id,
-                UserId = userId,
+                UserId = user.Id,
                 Rating = request.Rating,
                 Comment = request.Comment,
                 CreatedAt = DateTime.UtcNow
             };
 
-            var success = await _reviewRepository.CreateAsync(review);
+            var success = await unitOfWork.ReviewRepository.CreateAsync(review);
             if (!success)
                 return StatusCode(500, "Something went wrong while saving the review.");
 
-            var response = new ReviewResponse
-            {
-                ReviewId = review.Id,
-                TripId = review.TripId,
-                UserName = user.UserName,
-                Rating = review.Rating,
-                Comment = review.Comment,
-                CreatedAt = review.CreatedAt
-            };
-
-            return Ok(response);
+            return Ok();
         }
 
-        [HttpGet("tripsearch")]
-        public async Task<IActionResult> SearchTrips(
+        [HttpGet("SearchTrips")]
+        public async Task<IActionResult> GetSearchTrips(
             [FromQuery] TripSearchRequest request,
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
+            [FromQuery] int pageSize = 6,
             [FromQuery] string sortBy = "price",
             [FromQuery] string sortOrder = "asc")
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             var twoWeeksBefore = request.DesiredDate.AddDays(-14);
             var twoWeeksAfter = request.DesiredDate.AddDays(14);
 
-            var trips = await _tripRepository.GetAllAsync(
+            var trips = await unitOfWork.TripRepository.GetAllAsync(
                 filter: t =>
                     t.IsAvailable &&
                     t.AvailableSeats >= request.NumberOfPassengers &&
                     t.StartDate >= twoWeeksBefore &&
                     t.StartDate <= twoWeeksAfter &&
                     t.Country != null &&
-                    t.Country.Name.ToLower().Contains(request.CountryName.ToLower()),
-                includes: q => q.Include(t => t.Country).Include(t => t.Reviews)
+                    t.Country.Name.ToLower().Contains(request.CountryName ?? "".ToLower()),
+                includes: t => t.Include(t => t.Country).Include(t => t.Reviews).Include(t=> t.Hotels).Include(t=> t.Flights)
             );
 
             var response = trips.Select(t => new TripListResponse
@@ -340,7 +243,7 @@ namespace Tripesso.Areas.Customer.Controllers
             return Ok(result);
         }
 
-        [HttpPost("tripsearch")]
+        [HttpPost("SearchTrips")]
         public async Task<IActionResult> PostSearchTrips(
         [FromBody] TripSearchRequest request,
         [FromQuery] int pageNumber = 1,
@@ -348,22 +251,17 @@ namespace Tripesso.Areas.Customer.Controllers
         [FromQuery] string sortBy = "price",
         [FromQuery] string sortOrder = "asc")
         {
-            // Validate request model
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            // إعادة استخدام منطق البحث الموجود في GET
             var twoWeeksBefore = request.DesiredDate.AddDays(-14);
             var twoWeeksAfter = request.DesiredDate.AddDays(14);
 
-            var trips = await _tripRepository.GetAllAsync(
+            var trips = await unitOfWork.TripRepository.GetAllAsync(
                 filter: t =>
                     t.IsAvailable &&
                     t.AvailableSeats >= request.NumberOfPassengers &&
                     t.StartDate >= twoWeeksBefore &&
                     t.StartDate <= twoWeeksAfter &&
                     t.Country != null &&
-                    t.Country.Name.ToLower().Contains(request.CountryName.ToLower()),
+                    t.Country.Name.ToLower().Contains(request.CountryName ?? "".ToLower()),
                 includes: q => q.Include(t => t.Country).Include(t => t.Reviews)
             );
 
@@ -407,7 +305,8 @@ namespace Tripesso.Areas.Customer.Controllers
                 Data = paginatedData
             };
 
-            return Ok(result);
+            //return RedirectToAction(nameof(GetSearchTrips),result);
+            return Ok();
         }
 
 

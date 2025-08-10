@@ -10,6 +10,7 @@ namespace DataAccess.Repositories.IRepositories
         IAirportRepository AirportRepository { get; }
         IBookingRepository BookingRepository { get; }
         ICountryRepository CountryRepository { get; }
+        ITripCartRepository TripCartRepository { get; }
         IEventRepository EventRepository { get; }
         IFlightRepository FlightRepository { get; }
         IHotelRepository HotelRepository { get; }
@@ -17,6 +18,7 @@ namespace DataAccess.Repositories.IRepositories
         ISeatRepository SeatRepository { get; }
         ITicketRepository TicketRepository { get; }
         ITripRepository TripRepository { get; }
+        ITripWishlistRepository TripWishlistRepository { get; }
         UserManager<ApplicationUser> UserManager { get; }
         SignInManager<ApplicationUser> SignInManager { get; }
         Task<bool> CommitAsync();

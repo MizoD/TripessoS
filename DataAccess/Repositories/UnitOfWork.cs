@@ -12,8 +12,9 @@ namespace DataAccess.Repositories
                         IAirportRepository airportRepository, IBookingRepository bookingRepository, ICountryRepository countryRepository,
                         IEventRepository eventRepository, IFlightRepository flightRepository, IHotelRepository hotelRepository,
                         IReviewRepository reviewRepository, ISeatRepository seatRepository, ITicketRepository ticketRepository,
-                        ITripRepository tripRepository, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
-                        SignInManager<ApplicationUser> signInManager)
+                        ITripRepository tripRepository, ITripCartRepository tripCartRepository,ApplicationDbContext dbContext, 
+                        IFlightCartRepository flightCartRepository, IHotelCartRepository hotelCartRepository, ITripWishlistRepository tripWishlistRepository,
+                        UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             ApplicationUserOTPRepository = applicationUserOTPRepository;
             AirCraftRepository = airCraftRepository;
@@ -27,7 +28,11 @@ namespace DataAccess.Repositories
             SeatRepository = seatRepository;
             TicketRepository = ticketRepository;
             TripRepository = tripRepository;
+            TripCartRepository = tripCartRepository;
             this.dbContext = dbContext;
+            FlightCartRepository = flightCartRepository;
+            HotelCartRepository = hotelCartRepository;
+            TripWishlistRepository = tripWishlistRepository;
             UserManager = userManager;
             SignInManager = signInManager;
         }
@@ -44,6 +49,10 @@ namespace DataAccess.Repositories
         public ISeatRepository SeatRepository { get; }
         public ITicketRepository TicketRepository { get; }
         public ITripRepository TripRepository { get; }
+        public ITripCartRepository TripCartRepository { get; }
+        public IFlightCartRepository FlightCartRepository { get; }
+        public IHotelCartRepository HotelCartRepository { get; }
+        public ITripWishlistRepository TripWishlistRepository { get; }
         public UserManager<ApplicationUser> UserManager { get; }
         public SignInManager<ApplicationUser> SignInManager { get; }
 

@@ -13,6 +13,11 @@ namespace Models
         [Required]
         public int TripId { get; set; }
         public Trip? Trip { get; set; }
+        public int FlightId { get; set; }
+        public Flight? Flight { get; set; }
+
+        public int HotelId { get; set; }
+        public Hotel? Hotel { get; set; }
 
         [Required, Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
         public int Rating { get; set; }

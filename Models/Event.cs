@@ -9,7 +9,7 @@
         public DateTime EventDate { get; set; }
         public string LocationLink { get; set; } =string.Empty;
         public int CountryId { get; set; }
-        public Event Country { get; set; } = null!;
+        public Country Country { get; set; } = null!;
         public int TripId { get; set; }
         public Trip? Trip { get; set; }
     }

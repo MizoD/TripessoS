@@ -9,11 +9,11 @@ namespace Models
 
         [Required(ErrorMessage = "Title is required.")]
         [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
-        public string? Title { get; set; }
+        public string Title { get; set; } = null!;
 
         [Required(ErrorMessage = "Description is required.")]
-        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
-        public string? Description { get; set; }
+        [StringLength(100, ErrorMessage = "Description cannot exceed 100 characters.")]
+        public string? Description { get; set; } = null!;
 
         [Required(ErrorMessage = "Country is required.")]
         public int CountryId { get; set; }
@@ -41,9 +41,9 @@ namespace Models
         [Required(ErrorMessage = "Price is required.")]
         [Range(0, 999999, ErrorMessage = "Price must be between 0 and 999999.")]
         public decimal Price { get; set; }
-        public bool IsAvailable => AvailableSeats > 0;
-        public ICollection<Review>? Reviews { get; set; }
-        public ICollection<Cart>? Carts { get; set; }
-        public ICollection<Wishlist>? Wishlists { get; set; }
+        public bool IsAvailable { get; set; }
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
+        public ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
+        public ICollection<Flight> Flights { get; set; } = new List<Flight>();
     }
 }

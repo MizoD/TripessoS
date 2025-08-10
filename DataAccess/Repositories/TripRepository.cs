@@ -14,6 +14,8 @@ namespace DataAccess.Repositories
             return await _context.Trips
                 .Include(t => t.Country)
                 .Include(t => t.Reviews)
+                .Include(t=> t.Flights)
+                .Include(t=> t.Hotels)
                 .Where(t => t.IsAvailable)
                 .OrderBy(t => t.StartDate)
                 .ToListAsync();
@@ -23,6 +25,8 @@ namespace DataAccess.Repositories
             return await _context.Trips
                 .Include(t => t.Country)
                 .Include(t => t.Reviews)
+                .Include(t => t.Flights)
+                .Include(t => t.Hotels)
                 .FirstOrDefaultAsync(t => t.Id == tripId);
         }
 
@@ -33,8 +37,12 @@ namespace DataAccess.Repositories
                             t.CountryId == trip.CountryId &&
                             t.IsAvailable &&
                             Math.Abs(EF.Functions.DateDiffDay(t.StartDate, trip.StartDate)) <= 14)
+                .Include(t => t.Country)
+                .Include(t => t.Reviews)
+                .Include(t => t.Flights)
+                .Include(t => t.Hotels)
                 .OrderBy(t => t.StartDate)
-                .Take(5)
+                .Take(3)
                 .ToListAsync();
         }
     }

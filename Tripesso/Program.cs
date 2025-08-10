@@ -48,6 +48,10 @@ namespace Tripesso
             builder.Services.AddScoped<ISeatRepository, SeatRepository>();
             builder.Services.AddScoped<ITicketRepository, TicketRepository>();
             builder.Services.AddScoped<ITripRepository, TripRepository>();
+            builder.Services.AddScoped<ITripCartRepository, TripCartRepository>();
+            builder.Services.AddScoped<IFlightCartRepository, FlightCartRepository>();
+            builder.Services.AddScoped<IHotelCartRepository, HotelCartRepository>();
+            builder.Services.AddScoped<ITripWishlistRepository, TripWishlistRepository>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             builder.Services.AddAuthorization();

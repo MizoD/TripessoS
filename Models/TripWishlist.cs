@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Models
 {
-    public class Cart
+    public class TripWishlist
     {
         public int Id { get; set; }
 
@@ -18,9 +13,6 @@ namespace Models
         [Required]
         public int TripId { get; set; }
         public Trip? Trip { get; set; }
-
-        [Required, Range(1, int.MaxValue, ErrorMessage = "Must book at least 1 passenger.")]
-        public int NumberOfPassengers { get; set; }
 
         public DateTime AddedAt { get; set; } = DateTime.Now;
     }
