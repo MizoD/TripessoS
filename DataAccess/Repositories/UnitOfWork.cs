@@ -10,7 +10,7 @@ namespace DataAccess.Repositories
 
         public UnitOfWork(IApplicationUserOTPRepository applicationUserOTPRepository,IAirCraftRepository airCraftRepository, 
                         IAirportRepository airportRepository, IBookingRepository bookingRepository, ICountryRepository countryRepository,
-                        IEventRepository eventRepository, IFlightRepository flightRepository, IHotelRepository hotelRepository,
+                        IFlightRepository flightRepository, IHotelRepository hotelRepository,
                         IReviewRepository reviewRepository, ISeatRepository seatRepository, ITicketRepository ticketRepository,
                         ITripRepository tripRepository, ITripCartRepository tripCartRepository,ApplicationDbContext dbContext, 
                         IFlightCartRepository flightCartRepository, IHotelCartRepository hotelCartRepository, ITripWishlistRepository tripWishlistRepository,
@@ -21,7 +21,6 @@ namespace DataAccess.Repositories
             AirportRepository = airportRepository;
             BookingRepository = bookingRepository;
             CountryRepository = countryRepository;
-            EventRepository = eventRepository;
             FlightRepository = flightRepository;
             HotelRepository = hotelRepository;
             ReviewRepository = reviewRepository;
@@ -42,7 +41,6 @@ namespace DataAccess.Repositories
         public IAirportRepository AirportRepository { get; }
         public IBookingRepository BookingRepository { get; }
         public ICountryRepository CountryRepository { get; }
-        public IEventRepository EventRepository { get; }
         public IFlightRepository FlightRepository { get; }
         public IHotelRepository HotelRepository { get; }
         public IReviewRepository ReviewRepository { get; }

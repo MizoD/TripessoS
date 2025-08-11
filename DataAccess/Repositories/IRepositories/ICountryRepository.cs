@@ -2,7 +2,7 @@
 
 namespace DataAccess.Repositories.IRepositories
 {
-    public interface ICountryRepository : IRepository<Event>
+    public interface ICountryRepository : IRepository<Country>
     {
     }
 }

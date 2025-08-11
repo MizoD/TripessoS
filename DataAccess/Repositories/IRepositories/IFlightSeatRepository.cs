@@ -2,7 +2,7 @@
 
 namespace DataAccess.Repositories.IRepositories
 {
-    public interface IEventRepository : IRepository<Event>
+    public interface IFlightSeatRepository : IRepository<FlightSeat>
     {
     }
 }

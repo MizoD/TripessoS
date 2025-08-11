@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Models
 {
     public class ApplicationUser : IdentityUser
     {
+        [Required]
         public string FirstName { get; set; } = null!;
+        [Required]
         public string LastName { get; set; } = null!;
         public string? ImgUrl { get; set; }
         public DateTime LastLogin { get; set; }

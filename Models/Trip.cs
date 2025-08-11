@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Models
 {
+    public enum TripType { Tourism, Religion, Adventure, Romantic}
     public class Trip
     {
         public int Id { get; set; }
@@ -14,6 +15,8 @@ namespace Models
         [Required(ErrorMessage = "Description is required.")]
         [StringLength(100, ErrorMessage = "Description cannot exceed 100 characters.")]
         public string? Description { get; set; } = null!;
+        [Required]
+        public TripType TripType { get; set; }
 
         [Required(ErrorMessage = "Country is required.")]
         public int CountryId { get; set; }
@@ -42,8 +45,13 @@ namespace Models
         [Range(0, 999999, ErrorMessage = "Price must be between 0 and 999999.")]
         public decimal Price { get; set; }
         public bool IsAvailable { get; set; }
+        public ICollection<string> SecondryImages { get; set; } = new List<string>();
+        public string VideoUrl { get; set; } = string.Empty;
+        public double Rate { get; set; }
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
         public ICollection<Flight> Flights { get; set; } = new List<Flight>();
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
     }
 }

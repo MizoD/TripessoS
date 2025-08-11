@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using System.Reflection.Emit;
 namespace DataAccess
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -18,13 +19,68 @@ namespace DataAccess
         public DbSet<Country> Countries { get; set; }
         public DbSet<AirCraft> AirCrafts { get; set; }
         public DbSet<Airport> Airports { get; set; }
-        public DbSet<Booking> bookings { get; set; }
-        public DbSet<Event> Events { get; set; }   
+        public DbSet<Booking> bookings { get; set; }   
         public DbSet<Flight> Flights { get; set; }
+        public DbSet<FlightSeat> FlightSeats { get; set; }
         public DbSet<Hotel> Hotel { get; set; }
         public DbSet<Seat> Seats { get; set; }
         public DbSet<Ticket> Ticket { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            builder.Entity<Hotel>()
+                .HasOne(h => h.Trip)
+                .WithMany(t => t.Hotels)
+                .HasForeignKey(h => h.TripId)
+                .OnDelete(DeleteBehavior.NoAction);
+            
+            builder.Entity<Hotel>()
+                .HasOne(h => h.Country)
+                .WithMany(c => c.Hotels)
+                .HasForeignKey(h => h.CountryId)
+                .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Flight>()
+                .HasOne(f => f.ArrivalAirport)
+                .WithMany(a => a.ArrivalFlights)
+                .HasForeignKey(f => f.ArrivalAirportId)
+                .OnDelete(DeleteBehavior.NoAction);
 
+            builder.Entity<Flight>()
+                .HasOne(f => f.DepartureAirport)
+                .WithMany(a => a.DepratureFlights)
+                .HasForeignKey(f => f.DepartureAirportId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Flight>()
+                .HasOne(f => f.Trip)
+                .WithMany(t => t.Flights)
+                .HasForeignKey(f => f.TripId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Booking>()
+                .HasOne(b => b.Trip)
+                .WithMany(t => t.Bookings)
+                .HasForeignKey(b => b.TripId)
+                .OnDelete(DeleteBehavior.NoAction); 
+
+            builder.Entity<Booking>()
+                .HasOne(b => b.Flight)
+                .WithMany(f => f.Bookings)
+                .HasForeignKey(b => b.FlightId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Booking>()
+                .HasOne(b => b.Hotel)
+                .WithMany(h => h.Bookings)
+                .HasForeignKey(b => b.HotelId)
+                .OnDelete(DeleteBehavior.NoAction); 
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Trip)
+                .WithMany(t => t.Reviews)
+                .HasForeignKey(r => r.TripId)
+                .OnDelete(DeleteBehavior.NoAction);
+        }
     }
 }

@@ -11,7 +11,6 @@ namespace DataAccess.Repositories.IRepositories
         IBookingRepository BookingRepository { get; }
         ICountryRepository CountryRepository { get; }
         ITripCartRepository TripCartRepository { get; }
-        IEventRepository EventRepository { get; }
         IFlightRepository FlightRepository { get; }
         IHotelRepository HotelRepository { get; }
         IReviewRepository ReviewRepository { get; }
