@@ -12,6 +12,6 @@ namespace Models.DTOs.Response.TripResponse
         public int PageSize { get; set; }
         public int TotalCount { get; set; }
         public int TotalPages { get; set; }
-        public List<TripListResponse> Data { get; set; } = new();
+        public List<TripResponse> Data { get; set; } = new();
     }
 }

@@ -81,6 +81,11 @@ namespace DataAccess
                 .WithMany(t => t.Reviews)
                 .HasForeignKey(r => r.TripId)
                 .OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Trip>()
+                .HasOne(t=> t.Country)
+                .WithMany(c=> c.Trips)
+                .HasForeignKey(t=> t.CountryId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

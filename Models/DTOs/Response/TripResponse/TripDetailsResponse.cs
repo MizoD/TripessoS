@@ -19,7 +19,7 @@ namespace Models.DTOs.Response.TripResponse
         public int DurationDays { get; set; }
         public bool IsAvailable { get; set; }
 
-        public List<TripListResponse>? RelatedTrips { get; set; }
+        public List<TripResponse>? RelatedTrips { get; set; }
         public List<ReviewResponse>? Reviews { get; set; }
     }
 }

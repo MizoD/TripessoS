@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.DTOs.Request.TripRequest;
 using Models.DTOs.Response.TripResponse;
 using System.Security.Claims;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Tripesso.Areas.Customer.Controllers
 {
@@ -19,20 +20,48 @@ namespace Tripesso.Areas.Customer.Controllers
         }
 
         [HttpGet("index")]
-        public async Task<IActionResult> GetTrips([FromQuery] int pageNumber = 1)
+        public async Task<IActionResult> GetTrips([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 6)
         {
-            const int pageSize = 6;
-
+            // Get all available trips (consider adding filters here if needed)
             var allTrips = await unitOfWork.TripRepository.GetAllAvailableTripsAsync();
 
-            int tripsCount = allTrips.Count();
+            // Get total count before pagination
+            int totalCount = allTrips.Count();
+
+            // Apply pagination
             var pagedTrips = allTrips
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .Select(t => new TripResponse
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description!,
+                    Price = t.Price,
+                    ImageUrl = t.ImageUrl,
+                    CountryName = t.Country!.Name,
+                    AverageRating = t.Reviews.Any() ? t.Reviews.Average(r => r.Rating) : 0,
+                    ReviewCount = t.Reviews.Count,
+                    IsAvailable = t.IsAvailable,
+                    StartDate = t.StartDate,
+                    EndDate = t.EndDate,
+                    DurationDays = t.DurationDays,
+                    TripType = t.TripType,
+                    TotalSeats = t.TotalSeats,
+                    AvailableSeats = t.AvailableSeats,
+                })
                 .ToList();
 
-            var tripHome = new { PagedTrips = pagedTrips, CurrentPage = pageNumber, TotalPages = (int)Math.Ceiling((double)tripsCount / pageSize)};
-            return Ok(tripHome);
+            var response = new PaginatedTripResponse
+            {
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                Trips = pagedTrips
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("TripDetails/{id}")]
@@ -42,11 +71,29 @@ namespace Tripesso.Areas.Customer.Controllers
             if (trip == null)
                 return NotFound("Trip not found");
 
+            var currentTrip = new TripResponse
+            {
+                Id = trip.Id,
+                Title = trip.Title,
+                Description = trip.Description!,
+                Price = trip.Price,
+                ImageUrl = trip.ImageUrl,
+                CountryName = trip.Country!.Name,
+                AverageRating = trip.Reviews.Any() ? trip.Reviews.Average(r => r.Rating) : 0,
+                ReviewCount = trip.Reviews.Count,
+                IsAvailable = trip.IsAvailable,
+                StartDate = trip.StartDate,
+                EndDate = trip.EndDate,
+                DurationDays = trip.DurationDays,
+                TripType = trip.TripType,
+                TotalSeats = trip.TotalSeats,
+                AvailableSeats = trip.AvailableSeats,
+            };
             var relatedTrips = await unitOfWork.TripRepository.GetRelatedTripsAsync(trip);
 
             var tripDetails = new 
             {
-                Trip = trip,
+                Trip = currentTrip,
                 RelatedTrips = relatedTrips
             };
             return Ok(tripDetails);
@@ -187,21 +234,25 @@ namespace Tripesso.Areas.Customer.Controllers
             [FromQuery] string sortOrder = "asc")
         {
 
-            var twoWeeksBefore = request.DesiredDate.AddDays(-14);
-            var twoWeeksAfter = request.DesiredDate.AddDays(14);
-
             var trips = await unitOfWork.TripRepository.GetAllAsync(
                 filter: t =>
                     t.IsAvailable &&
                     t.AvailableSeats >= request.NumberOfPassengers &&
-                    t.StartDate >= twoWeeksBefore &&
-                    t.StartDate <= twoWeeksAfter &&
                     t.Country != null &&
                     t.Country.Name.ToLower().Contains(request.CountryName ?? "".ToLower()),
-                includes: t => t.Include(t => t.Country).Include(t => t.Reviews).Include(t=> t.Hotels).Include(t=> t.Flights)
+                includes: q => q.Include(t => t.Country).Include(t => t.Reviews)
             );
 
-            var response = trips.Select(t => new TripListResponse
+            if (request.DesiredDate.HasValue)
+            {
+                var twoWeeksBefore = request.DesiredDate.Value.AddDays(-14);
+                var twoWeeksAfter = request.DesiredDate.Value.AddDays(14);
+
+                trips = trips.Where(t => t.StartDate >= twoWeeksBefore &&
+                    t.StartDate <= twoWeeksAfter);
+            }
+
+            var response = trips.Select(t => new TripResponse
             {
                 Id = t.Id,
                 Title = t.Title,
@@ -251,21 +302,26 @@ namespace Tripesso.Areas.Customer.Controllers
         [FromQuery] string sortBy = "price",
         [FromQuery] string sortOrder = "asc")
         {
-            var twoWeeksBefore = request.DesiredDate.AddDays(-14);
-            var twoWeeksAfter = request.DesiredDate.AddDays(14);
-
             var trips = await unitOfWork.TripRepository.GetAllAsync(
                 filter: t =>
                     t.IsAvailable &&
                     t.AvailableSeats >= request.NumberOfPassengers &&
-                    t.StartDate >= twoWeeksBefore &&
-                    t.StartDate <= twoWeeksAfter &&
                     t.Country != null &&
                     t.Country.Name.ToLower().Contains(request.CountryName ?? "".ToLower()),
                 includes: q => q.Include(t => t.Country).Include(t => t.Reviews)
             );
 
-            var response = trips.Select(t => new TripListResponse
+            if (request.DesiredDate.HasValue)
+            {
+                var twoWeeksBefore = request.DesiredDate.Value.AddDays(-14);
+                var twoWeeksAfter = request.DesiredDate.Value.AddDays(14);
+
+                trips = trips.Where(t => t.StartDate >= twoWeeksBefore &&
+                    t.StartDate <= twoWeeksAfter);
+            }
+
+
+            var response = trips.Select(t => new TripResponse
             {
                 Id = t.Id,
                 Title = t.Title,
@@ -306,7 +362,7 @@ namespace Tripesso.Areas.Customer.Controllers
             };
 
             //return RedirectToAction(nameof(GetSearchTrips),result);
-            return Ok();
+            return Ok(result);
         }
 
 

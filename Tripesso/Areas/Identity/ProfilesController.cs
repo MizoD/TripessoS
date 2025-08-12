@@ -1,6 +1,7 @@
 ﻿using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace BookStore.Areas.Identity.Controllers
@@ -42,34 +43,101 @@ namespace BookStore.Areas.Identity.Controllers
             }
             if (user is null) return NotFound();
 
-            var upuser = editProfileRequest.Adapt<ApplicationUser>();
-            if (editProfileRequest.ImageUrl is not null && editProfileRequest.ImageUrl.Length > 0)
-            {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(editProfileRequest.ImageUrl.FileName);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images", fileName);
+            var upuser = await unitOfWork.UserManager.FindByIdAsync(user.Id);
+            if (upuser is null) return NotFound();
 
+            if (!string.IsNullOrWhiteSpace(editProfileRequest.FirstName))
+            {
+                upuser.FirstName = editProfileRequest.FirstName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(editProfileRequest.LastName))
+            {
+                upuser.LastName = editProfileRequest.LastName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(editProfileRequest.Email))
+            {
+                if (!new EmailAddressAttribute().IsValid(editProfileRequest.Email))
+                {
+                    return BadRequest("Invalid email format");
+                }
+
+                // Check if email is already taken by another user
+                var emailOwner = await unitOfWork.UserManager.FindByEmailAsync(editProfileRequest.Email);
+                if (emailOwner != null && emailOwner.Id != upuser.Id)
+                {
+                    return BadRequest("Email is already in use by another account");
+                }
+
+                upuser.Email = editProfileRequest.Email;
+                upuser.NormalizedEmail = editProfileRequest.Email.ToUpper();
+            }
+
+            if (!string.IsNullOrWhiteSpace(editProfileRequest.PhoneNumber))
+            {
+                upuser.PhoneNumber = editProfileRequest.PhoneNumber;
+            }
+
+            if (editProfileRequest.Address != null)
+            {
+                upuser.Address = editProfileRequest.Address;
+            }
+
+            if (editProfileRequest.ImageUrl != null && editProfileRequest.ImageUrl.Length > 0)
+            {
+                // Validate image
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var extension = Path.GetExtension(editProfileRequest.ImageUrl.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest("Invalid image format. Only JPG, PNG, and GIF are allowed.");
+                }
+
+                // Generate unique filename
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var imagesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+
+                // Ensure directory exists
+                Directory.CreateDirectory(imagesPath);
+
+                // Save new image
+                var filePath = Path.Combine(imagesPath, fileName);
                 using (var stream = System.IO.File.Create(filePath))
                 {
                     await editProfileRequest.ImageUrl.CopyToAsync(stream);
                 }
 
-                // Delete old Img in wwwroot
-                var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images", user.ImgUrl ?? " ");
-                if (System.IO.File.Exists(oldFilePath))
+                // Delete old image if exists
+                if (!string.IsNullOrEmpty(upuser.ImgUrl))
                 {
-                    System.IO.File.Delete(oldFilePath);
+                    var oldFilePath = Path.Combine(imagesPath, upuser.ImgUrl);
+                    if (System.IO.File.Exists(oldFilePath))
+                    {
+                            System.IO.File.Delete(oldFilePath);
+                    }
                 }
 
-                // Update Img in DB
                 upuser.ImgUrl = fileName;
             }
-            else
+
+            // 5. Save changes
+            var result = await unitOfWork.UserManager.UpdateAsync(upuser);
+            if (!result.Succeeded)
             {
-                upuser.ImgUrl = user.ImgUrl;
+                return BadRequest(result.Errors);
             }
 
-            await unitOfWork.UserManager.UpdateAsync(upuser);
-            return Ok("User Updated Succssefully");
+            try
+            {
+                await unitOfWork.CommitAsync();
+                return Ok( "Profile updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while updating your profile : {ex}");
+            }
         }
         [HttpGet("Bookings")]
         public async Task<IActionResult> Bookings()

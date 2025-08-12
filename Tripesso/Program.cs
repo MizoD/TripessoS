@@ -94,9 +94,10 @@ namespace Tripesso
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5500") // your HTML server origin
+                    policy.WithOrigins("http://localhost:5500") 
                           .AllowAnyHeader()
                           .AllowAnyMethod();
+                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
                 });
             });
 
@@ -112,10 +113,12 @@ namespace Tripesso
 
             app.UseHttpsRedirection();
 
+            app.UseCors("AllowFrontend");
+
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseCors("AllowFrontend");
+            
             app.MapControllers();
 
             using (var scope = app.Services.CreateScope())

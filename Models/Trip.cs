@@ -45,8 +45,8 @@ namespace Models
         [Range(0, 999999, ErrorMessage = "Price must be between 0 and 999999.")]
         public decimal Price { get; set; }
         public bool IsAvailable { get; set; }
-        public ICollection<string> SecondryImages { get; set; } = new List<string>();
-        public string VideoUrl { get; set; } = string.Empty;
+        public ICollection<string>? SecondryImages { get; set; }
+        public string? VideoUrl { get; set; } = string.Empty;
         public double Rate { get; set; }
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
