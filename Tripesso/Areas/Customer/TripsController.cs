@@ -1,20 +1,18 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.DTOs.Request.TripRequest;
 using Models.DTOs.Response.TripResponse;
 using System.Security.Claims;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Tripesso.Areas.Customer.Controllers
 {
     [Route("api/[area]/[controller]")]
     [ApiController]
     [Area("Customer")]
-    public class TripController : ControllerBase
+    public class TripsController : ControllerBase
     {
         private readonly IUnitOfWork unitOfWork;
-        public TripController(IUnitOfWork unitOfWork)
+        public TripsController(IUnitOfWork unitOfWork)
         {
             this.unitOfWork = unitOfWork;
         }
@@ -223,75 +221,6 @@ namespace Tripesso.Areas.Customer.Controllers
                 return StatusCode(500, "Something went wrong while saving the review.");
 
             return Ok();
-        }
-
-        [HttpGet("SearchTrips")]
-        public async Task<IActionResult> GetSearchTrips(
-            [FromQuery] TripSearchRequest request,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 6,
-            [FromQuery] string sortBy = "price",
-            [FromQuery] string sortOrder = "asc")
-        {
-
-            var trips = await unitOfWork.TripRepository.GetAllAsync(
-                filter: t =>
-                    t.IsAvailable &&
-                    t.AvailableSeats >= request.NumberOfPassengers &&
-                    t.Country != null &&
-                    t.Country.Name.ToLower().Contains(request.CountryName ?? "".ToLower()),
-                includes: q => q.Include(t => t.Country).Include(t => t.Reviews)
-            );
-
-            if (request.DesiredDate.HasValue)
-            {
-                var twoWeeksBefore = request.DesiredDate.Value.AddDays(-14);
-                var twoWeeksAfter = request.DesiredDate.Value.AddDays(14);
-
-                trips = trips.Where(t => t.StartDate >= twoWeeksBefore &&
-                    t.StartDate <= twoWeeksAfter);
-            }
-
-            var response = trips.Select(t => new TripResponse
-            {
-                Id = t.Id,
-                Title = t.Title,
-                CountryName = t.Country!.Name,
-                StartDate = t.StartDate,
-                Price = t.Price,
-                ImageUrl = t.ImageUrl,
-                DurationDays = t.DurationDays,
-                IsAvailable = t.IsAvailable,
-                AverageRating = t.Reviews != null && t.Reviews.Any()
-                    ? Math.Round(t.Reviews.Average(r => r.Rating), 1)
-                    : 0
-            });
-
-            response = sortBy.ToLower() switch
-            {
-                "price" => sortOrder.ToLower() == "desc" ? response.OrderByDescending(r => r.Price) : response.OrderBy(r => r.Price),
-                "rating" => sortOrder.ToLower() == "desc" ? response.OrderByDescending(r => r.AverageRating) : response.OrderBy(r => r.AverageRating),
-                _ => response.OrderBy(r => r.Price)
-            };
-
-            var totalCount = response.Count();
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-
-            var paginatedData = response
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            var result = new TripSearchResponse
-            {
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages,
-                Data = paginatedData
-            };
-
-            return Ok(result);
         }
 
         [HttpPost("SearchTrips")]

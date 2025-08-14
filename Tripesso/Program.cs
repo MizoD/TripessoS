@@ -42,7 +42,6 @@ namespace Tripesso
             builder.Services.AddScoped<IBookingRepository, BookingRepository>();
             builder.Services.AddScoped<ICountryRepository, CountryRepository>();
             builder.Services.AddScoped<IFlightRepository, FlightRepository>();
-            builder.Services.AddScoped<IFlightSeatRepository, FlightSeatRepository>();
             builder.Services.AddScoped<IHotelRepository, HotelRepository>();
             builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
             builder.Services.AddScoped<ISeatRepository, SeatRepository>();
@@ -52,6 +51,8 @@ namespace Tripesso
             builder.Services.AddScoped<IFlightCartRepository, FlightCartRepository>();
             builder.Services.AddScoped<IHotelCartRepository, HotelCartRepository>();
             builder.Services.AddScoped<ITripWishlistRepository, TripWishlistRepository>();
+            builder.Services.AddScoped<IHotelWishlistRepository, HotelWishlistRepository>();
+            builder.Services.AddScoped<IFlightWishlistRepository,  FlightWishlistRepository>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             builder.Services.AddAuthorization();

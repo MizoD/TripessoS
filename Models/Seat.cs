@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Models
 {
@@ -7,13 +8,32 @@ namespace Models
     {
         public int Id { get; set; }
 
-        [Required]
-        public string Number { get; set; } = null!;
+        [Required(ErrorMessage = "Seat number is required")]
+        [StringLength(10, ErrorMessage = "Seat number cannot exceed 10 characters")]
+        public string Number { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Seat class is required")]
         public Coach Coach { get; set; }
 
         public bool IsBooked { get; set; }
         public bool IsCheckedIn { get; set; }
-        public ICollection<FlightSeat> FlightSeats { get; set; } = new List<FlightSeat>();
 
+        [Required(ErrorMessage = "Flight is required")]
+        public int FlightId { get; set; }
+        public Flight Flight { get; set; } = null!;
+        public int? BookingId { get; set; }
+        public Booking? Booking { get; set; }
+
+        [NotMapped]
+        public string SeatLabel => $"{Number} ({Coach})";
+
+        [NotMapped]
+        public decimal CurrentPrice => Flight?.GetPriceForCoach(Coach) ?? 0;
+
+        public bool CanCheckIn()
+        {
+            return IsBooked && !IsCheckedIn &&
+                   Flight?.Status == FlightStatus.Boarding;
+        }
     }
 }

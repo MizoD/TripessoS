@@ -2,7 +2,7 @@
 
 namespace DataAccess.Repositories.IRepositories
 {
-    public interface IFlightSeatRepository : IRepository<FlightSeat>
+    public interface IHotelWishlistRepository : IRepository<HotelWishlist>
     {
     }
 }

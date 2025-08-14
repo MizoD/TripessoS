@@ -3,17 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Models
 {
-    [PrimaryKey(nameof(UserId), nameof(TripId))]
-    public class TripWishlist
+    [PrimaryKey(nameof(UserId), nameof(FlightId))]
+    public class FlightWishlist
     {
-
         [Required]
         public string? UserId { get; set; }
         public ApplicationUser? User { get; set; }
 
         [Required]
-        public int TripId { get; set; }
-        public Trip? Trip { get; set; }
+        public int FlightId { get; set; }
+        public Flight? Flight { get; set; }
 
         public DateTime AddedAt { get; set; } = DateTime.UtcNow;
     }

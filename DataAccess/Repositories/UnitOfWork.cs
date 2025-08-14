@@ -10,11 +10,11 @@ namespace DataAccess.Repositories
 
         public UnitOfWork(IApplicationUserOTPRepository applicationUserOTPRepository,IAirCraftRepository airCraftRepository, 
                         IAirportRepository airportRepository, IBookingRepository bookingRepository, ICountryRepository countryRepository,
-                        IFlightRepository flightRepository, IHotelRepository hotelRepository,
+                        IFlightRepository flightRepository, IHotelRepository hotelRepository, IFlightWishlistRepository flightWishlistRepository,
                         IReviewRepository reviewRepository, ISeatRepository seatRepository, ITicketRepository ticketRepository,
                         ITripRepository tripRepository, ITripCartRepository tripCartRepository,ApplicationDbContext dbContext, 
                         IFlightCartRepository flightCartRepository, IHotelCartRepository hotelCartRepository, ITripWishlistRepository tripWishlistRepository,
-                        UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+                        IHotelWishlistRepository hotelWishlistRepository, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             ApplicationUserOTPRepository = applicationUserOTPRepository;
             AirCraftRepository = airCraftRepository;
@@ -23,6 +23,7 @@ namespace DataAccess.Repositories
             CountryRepository = countryRepository;
             FlightRepository = flightRepository;
             HotelRepository = hotelRepository;
+            FlightWishlistRepository = flightWishlistRepository;
             ReviewRepository = reviewRepository;
             SeatRepository = seatRepository;
             TicketRepository = ticketRepository;
@@ -32,6 +33,7 @@ namespace DataAccess.Repositories
             FlightCartRepository = flightCartRepository;
             HotelCartRepository = hotelCartRepository;
             TripWishlistRepository = tripWishlistRepository;
+            HotelWishlistRepository = hotelWishlistRepository;
             UserManager = userManager;
             SignInManager = signInManager;
         }
@@ -43,6 +45,7 @@ namespace DataAccess.Repositories
         public ICountryRepository CountryRepository { get; }
         public IFlightRepository FlightRepository { get; }
         public IHotelRepository HotelRepository { get; }
+        public IFlightWishlistRepository FlightWishlistRepository { get; }
         public IReviewRepository ReviewRepository { get; }
         public ISeatRepository SeatRepository { get; }
         public ITicketRepository TicketRepository { get; }
@@ -51,6 +54,7 @@ namespace DataAccess.Repositories
         public IFlightCartRepository FlightCartRepository { get; }
         public IHotelCartRepository HotelCartRepository { get; }
         public ITripWishlistRepository TripWishlistRepository { get; }
+        public IHotelWishlistRepository HotelWishlistRepository { get; }
         public UserManager<ApplicationUser> UserManager { get; }
         public SignInManager<ApplicationUser> SignInManager { get; }
 

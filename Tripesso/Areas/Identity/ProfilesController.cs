@@ -122,7 +122,6 @@ namespace BookStore.Areas.Identity.Controllers
                 upuser.ImgUrl = fileName;
             }
 
-            // 5. Save changes
             var result = await unitOfWork.UserManager.UpdateAsync(upuser);
             if (!result.Succeeded)
             {

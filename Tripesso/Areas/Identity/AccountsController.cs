@@ -30,6 +30,8 @@ namespace Tripesso.Areas.Identity
 
             if (result.Succeeded)
             {
+                user.RegistraionDate = DateTime.UtcNow;
+                await unitOfWork.CommitAsync();
                 await unitOfWork.UserManager.AddToRoleAsync(user, SD.Customer);
 
                 // Send Confirmation Email

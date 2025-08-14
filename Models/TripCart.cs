@@ -6,8 +6,6 @@ namespace Models
     [PrimaryKey(nameof(UserId), nameof(TripId))]
     public class TripCart
     {
-        public int Id { get; set; }
-
         [Required]
         public string UserId { get; set; } = null!;
         public ApplicationUser User { get; set; } = null!;
