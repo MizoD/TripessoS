@@ -15,6 +15,7 @@ namespace Models
         public PaymentMethod PaymentMethod { get; set; }
         public string? PaymentId { get; set; }
         public string? SessionId { get; set; }
+        public bool IsPaid { get; set; }
         [Required]
         public string UserId { get; set; } = null!;
         public ApplicationUser User { get; set; } = null!;

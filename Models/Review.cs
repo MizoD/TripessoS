@@ -10,7 +10,9 @@ namespace Models
         public string? UserId { get; set; }
         public ApplicationUser? User { get; set; }
         public int TripId { get; set; }
+        public int HotelId { get; set; }
         public Trip? Trip { get; set; }
+        public Hotel? Hotel { get; set; }
 
         [Required, Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
         public int Rating { get; set; }
