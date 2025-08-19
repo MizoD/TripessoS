@@ -7,6 +7,7 @@
         public string Description { get; set; } = null!;
         public TripType TripType { get; set; }
         public string CountryName { get; set; } = null!;
+        public int CountryId { get; set; }
         public string? ImageUrl { get; set; }
         public int DurationDays { get; set; }
         public DateTime StartDate { get; set; }
