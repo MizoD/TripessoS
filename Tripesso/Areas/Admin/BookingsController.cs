@@ -12,11 +12,11 @@ namespace Tripesso.Areas.Admin
     [Area("Admin")]
     [Authorize(Roles = $"{SD.SuperAdmin},{SD.Admin}")]
     [ApiController]
-    public class BookingController : ControllerBase
+    public class BookingsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        public BookingController(ApplicationDbContext context)
+        public BookingsController(ApplicationDbContext context)
         {
             _context = context;
         }

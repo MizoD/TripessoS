@@ -32,6 +32,7 @@ namespace Models
 
         [Required(ErrorMessage = "Arrival time is required")]
         public DateTime ArrivalTime { get; set; }
+        public int Traffic { get; set; }
 
         [Required(ErrorMessage = "Departure airport is required")]
         public int DepartureAirportId { get; set; }

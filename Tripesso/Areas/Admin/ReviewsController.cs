@@ -26,7 +26,6 @@ namespace Tripesso.Areas.Admin.Controllers
             var reviews = await _context.Reviews
                 .Include(r => r.User)
                 .Include(r => r.Trip)
-                .Include(r => r.Hotel)
                 .ToListAsync();
 
             var reviewResponses = reviews.Select(r => new UserReviewResponse
@@ -35,11 +34,9 @@ namespace Tripesso.Areas.Admin.Controllers
                 UserId = r.UserId!,
                 UserName = r.User?.UserName ?? "",
                 TripId = r.TripId,
-                TripName = r.Trip?.Title,
-                HotelId = r.HotelId,
-                HotelName = r.Hotel?.Name,
+                TripName = r.Trip?.Title ?? " ",
                 Rating = r.Rating,
-                Comment = r.Comment,
+                Comment = r.Comment ?? " ",
                 CreatedAt = r.CreatedAt
             }).ToList();
 
@@ -53,7 +50,7 @@ namespace Tripesso.Areas.Admin.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            if (request.TripId == null && request.HotelId == null)
+            if (request.TripId <= 0)
                 return BadRequest("Review must be linked to either a Trip or a Hotel.");
 
             if (request.Rating < 1 || request.Rating > 5)
@@ -63,7 +60,6 @@ namespace Tripesso.Areas.Admin.Controllers
             {
                 UserId = request.UserId,
                 TripId = request.TripId,
-                HotelId = request.HotelId,
                 Rating = request.Rating,
                 Comment = request.Comment,
                 CreatedAt = DateTime.UtcNow
@@ -79,9 +75,7 @@ namespace Tripesso.Areas.Admin.Controllers
                 UserId = review.UserId!,
                 UserName = (await _context.Users.FindAsync(review.UserId))?.UserName ?? "",
                 TripId = review.TripId,
-                TripName = (await _context.Trips.FindAsync(review.TripId))?.Title,
-                HotelId = review.HotelId,
-                HotelName = (await _context.Hotel.FindAsync(review.HotelId))?.Name,
+                TripName = (await _context.Trips.FindAsync(review.TripId))?.Title ?? " ",
                 Rating = review.Rating,
                 Comment = review.Comment,
                 CreatedAt = review.CreatedAt
@@ -106,7 +100,6 @@ namespace Tripesso.Areas.Admin.Controllers
             review.Rating = request.Rating;
             review.Comment = request.Comment;
             review.TripId = request.TripId;
-            review.HotelId = request.HotelId;
 
             _context.Reviews.Update(review);
             await _context.SaveChangesAsync();
@@ -117,9 +110,7 @@ namespace Tripesso.Areas.Admin.Controllers
                 UserId = review.UserId!,
                 UserName = (await _context.Users.FindAsync(review.UserId))?.UserName ?? "",
                 TripId = review.TripId,
-                TripName = (await _context.Trips.FindAsync(review.TripId))?.Title,
-                HotelId = review.HotelId,
-                HotelName = (await _context.Hotel.FindAsync(review.HotelId))?.Name,
+                TripName = (await _context.Trips.FindAsync(review.TripId))?.Title?? " ",
                 Rating = review.Rating,
                 Comment = review.Comment,
                 CreatedAt = review.CreatedAt

@@ -19,6 +19,7 @@ namespace Models
         public decimal PricePerNight { get; set; }
         [Required]
         public string City { get; set; } = null!;
+        public int Traffic { get; set; }
         [Required]
         public int CountryId { get; set; }
         public Country Country { get; set; } = null!;

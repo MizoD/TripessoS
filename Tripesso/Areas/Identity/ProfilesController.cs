@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata;
 using System.Security.Claims;
 
 namespace BookStore.Areas.Identity.Controllers
@@ -138,8 +139,9 @@ namespace BookStore.Areas.Identity.Controllers
                 return StatusCode(500, $"An error occurred while updating your profile : {ex}");
             }
         }
-        [HttpGet("Bookings")]
-        public async Task<IActionResult> Bookings()
+
+        [HttpGet("DashBoard")]
+        public async Task<IActionResult> Dashboard()
         {
             var user = await unitOfWork.UserManager.GetUserAsync(User);
             if (user is null)
@@ -147,9 +149,102 @@ namespace BookStore.Areas.Identity.Controllers
                 string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
                 user = await unitOfWork.UserManager.FindByIdAsync(userId);
             }
-            if (user is null) return NotFound();
+            if (user is null) return Unauthorized("Can't Found Such a user!");
 
-            return Ok();
+            var bookingsCount = (await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id)).Count(); 
+
+            var hotelWishlistCount = (await unitOfWork.HotelWishlistRepository.GetAllAsync(h=> h.UserId == user.Id)).Count();
+            var tripWishlistCount = (await unitOfWork.TripWishlistRepository.GetAllAsync(h => h.UserId == user.Id)).Count();
+            var flightWishlistCount = (await unitOfWork.FlightWishlistRepository.GetAllAsync(h => h.UserId == user.Id)).Count();
+
+            var allwishlistCount = hotelWishlistCount + tripWishlistCount + flightWishlistCount;
+            
+            var flightsBookedCount = (await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id && b.FlightId > 0)).Count();
+            var userReviewsCount = (await unitOfWork.ReviewRepository.GetAllAsync(r=> r.UserId == user.Id)).Count();
+
+            var bookings = await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id);
+
+            return Ok(new
+            {
+                Bookings = bookings,
+                BookingsCount = bookingsCount,
+                AllwishlistCount = allwishlistCount,
+                FlightsBookedCount = flightsBookedCount,
+                UserReviewsCount = userReviewsCount
+            });
+        }
+
+
+        [HttpGet("MyBookings")]
+        public async Task<IActionResult> MyBookings()
+        {
+            var user = await unitOfWork.UserManager.GetUserAsync(User);
+            if (user is null)
+            {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                user = await unitOfWork.UserManager.FindByIdAsync(userId);
+            }
+            if (user is null) return Unauthorized("Can't Found Such a user!");
+
+            var myBookings = await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id);
+            if (myBookings == null) return Ok("There is no Bookings yet!");
+
+            return Ok(myBookings);
+        }
+
+        [HttpGet("MyReviews")]
+        public async Task<IActionResult> MyReviewsAsync() {
+
+            var user = await unitOfWork.UserManager.GetUserAsync(User);
+            if (user is null)
+            {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                user = await unitOfWork.UserManager.FindByIdAsync(userId);
+            }
+            if (user is null) return Unauthorized("Can't Found Such a user!");
+
+            var myReviews = await unitOfWork.ReviewRepository.GetAllAsync(r=> r.UserId == user.Id);
+            if (myReviews == null) return Ok("There is no Reviews yet!");
+
+            return Ok(myReviews);
+        }
+
+        [HttpGet("MyWishlist")]
+        public async Task<IActionResult> MyWishlist()
+        {
+            var user = await unitOfWork.UserManager.GetUserAsync(User);
+            if (user is null)
+            {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+                user = await unitOfWork.UserManager.FindByIdAsync(userId);
+            }
+            if (user is null) return Unauthorized("Can't Found Such a user!");
+
+            var myTripsWishlist = await unitOfWork.TripWishlistRepository.GetAllAsync(t=> t.UserId == user.Id);
+
+            var myFlightsWishlist = await unitOfWork.FlightWishlistRepository.GetAllAsync(f=> f.UserId == user.Id);
+
+            var myHotelsWishlist = await unitOfWork.HotelWishlistRepository.GetAllAsync(h=> h.UserId == user.Id);
+
+            if (myTripsWishlist == null && myFlightsWishlist == null && myHotelsWishlist == null) return Ok("There is no Wishlists yet!");
+
+
+            return Ok(new
+            {
+                MyTripsWishlist = myTripsWishlist,
+                MyFlightsWishlist = myFlightsWishlist,
+                MyHotelsWishlist = myHotelsWishlist
+            });
+        }
+
+
+        [HttpGet("Logout")]
+        public async Task<IActionResult> LogoutAsync() {
+
+            await unitOfWork.SignInManager.SignOutAsync();
+
+            return Ok("User Logged Out Successfully!");
+
         }
     }
 }

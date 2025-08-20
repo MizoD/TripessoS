@@ -20,8 +20,7 @@ namespace Tripesso.Areas.Admin.Controllers
             _context = context;
         }
 
-        // GET: admin/trips?page=1&pageSize=10
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
             var query = _context.Trips
@@ -70,8 +69,7 @@ namespace Tripesso.Areas.Admin.Controllers
             });
         }
 
-        // GET: admin/trips/{id}
-        [HttpGet("{id}")]
+        [HttpGet("GetById/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var trip = await _context.Trips
@@ -107,8 +105,7 @@ namespace Tripesso.Areas.Admin.Controllers
             return Ok(response);
         }
 
-        // POST: admin/trips
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] CreateTripRequest request)
         {
             if (!ModelState.IsValid)
@@ -138,8 +135,7 @@ namespace Tripesso.Areas.Admin.Controllers
             return Ok(new { message = "✅ Trip created successfully!", tripId = trip.Id });
         }
 
-        // PUT: admin/trips/{id}
-        [HttpPut("{id}")]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateTripRequest request)
         {
             if (!ModelState.IsValid)
@@ -169,8 +165,7 @@ namespace Tripesso.Areas.Admin.Controllers
             return Ok(new { message = "✏️ Trip updated successfully!" });
         }
 
-        // DELETE: admin/trips/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var trip = await _context.Trips.FindAsync(id);
