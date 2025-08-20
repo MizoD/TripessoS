@@ -126,7 +126,7 @@ namespace Tripesso.Areas.Admin.Controllers
                 IsAvailable = request.IsAvailable,
                 SecondryImages = request.SecondaryImages,
                 VideoUrl = request.VideoUrl,
-                Rate = 0 
+                Rate = 0
             };
 
             _context.Trips.Add(trip);
