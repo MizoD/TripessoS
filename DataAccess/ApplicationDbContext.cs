@@ -25,9 +25,10 @@ namespace DataAccess
         public DbSet<Airport> Airports { get; set; }
         public DbSet<Booking> Bookings { get; set; }   
         public DbSet<Flight> Flights { get; set; }
-        public DbSet<Hotel> Hotel { get; set; }
+        public DbSet<Hotel> Hotels { get; set; }
         public DbSet<Seat> Seats { get; set; }
-        public DbSet<Ticket> Ticket { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<Passenger> Passengers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

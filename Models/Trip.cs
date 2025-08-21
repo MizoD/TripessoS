@@ -13,8 +13,8 @@ namespace Models
         public string Title { get; set; } = null!;
 
         [Required(ErrorMessage = "Description is required.")]
-        [StringLength(100, ErrorMessage = "Description cannot exceed 100 characters.")]
-        public string? Description { get; set; } = null!;
+        [StringLength(1000, ErrorMessage = "Description cannot exceed 100 characters.")]
+        public string Description { get; set; } = null!;
         [Required]
         public TripType TripType { get; set; }
 
@@ -47,7 +47,7 @@ namespace Models
         public bool IsAvailable { get; set; }
         public ICollection<string>? SecondryImages { get; set; }
         public string? VideoUrl { get; set; } = string.Empty;
-        public double Rate { get; set; }
+        public decimal Rate { get; set; }
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
         public ICollection<Flight> Flights { get; set; } = new List<Flight>();

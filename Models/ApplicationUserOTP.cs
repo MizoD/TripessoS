@@ -6,7 +6,7 @@ namespace Models
     {
         public int Id { get; set; }
         [Required]
-        public string OTPNumber { get; set; } = null!;
+        public string Code { get; set; } = null!;
         public DateTime SendDate { get; set; }
         public bool Status { get; set; }
         public DateTime ValidTo { get; set; }

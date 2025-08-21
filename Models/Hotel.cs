@@ -14,7 +14,7 @@ namespace Models
         [DataType(DataType.PhoneNumber)]
         public string Phone { get; set; } = null!;
         [Required]
-        public int AvilableRooms { get; set; }
+        public int AvailableRooms { get; set; }
         [Required]
         public decimal PricePerNight { get; set; }
         [Required]

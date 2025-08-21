@@ -6,8 +6,8 @@ using Models;
 namespace Tripesso.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "SuperAdmin,Admin")]
-    [Route("admin/[controller]")]
+    [Authorize(Roles = $"{SD.SuperAdmin},{SD.Admin}")]
+    [Route("admin/[area]/[controller]")]
     [ApiController]
     public class CountriesController : ControllerBase
     {

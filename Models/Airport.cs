@@ -12,6 +12,6 @@ namespace Models
         public int CountryId { get; set; }
         public Country Country { get; set; } = null!;
         public ICollection<Flight> ArrivalFlights { get; set; } = new List<Flight>();
-        public ICollection<Flight> DepratureFlights { get; set; } = new List<Flight>();
+        public ICollection<Flight> DepartureFlights { get; set; } = new List<Flight>();
     }
 }

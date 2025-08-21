@@ -7,10 +7,10 @@ namespace Models
         public int Id { get; set; }
 
         [Required]
-        public string? UserId { get; set; }
-        public ApplicationUser? User { get; set; }
+        public string UserId { get; set; } = null!;
+        public ApplicationUser User { get; set; } = null!;
         public int TripId { get; set; }
-        public Trip? Trip { get; set; }
+        public Trip Trip { get; set; } = null!;
 
         [Required, Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
         public int Rating { get; set; }

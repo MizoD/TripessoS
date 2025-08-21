@@ -21,8 +21,6 @@ namespace Models
         [Required(ErrorMessage = "Flight is required")]
         public int FlightId { get; set; }
         public Flight Flight { get; set; } = null!;
-        public int? BookingId { get; set; }
-        public Booking? Booking { get; set; }
 
         [NotMapped]
         public string SeatLabel => $"{Number} ({Coach})";
@@ -33,7 +31,7 @@ namespace Models
         public bool CanCheckIn()
         {
             return IsBooked && !IsCheckedIn &&
-                   Flight?.Status == FlightStatus.Boarding;
+                   Flight.Status == FlightStatus.Boarding;
         }
     }
 }
