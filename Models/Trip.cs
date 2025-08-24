@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Models
 {
@@ -20,6 +21,7 @@ namespace Models
 
         [Required(ErrorMessage = "Country is required.")]
         public int CountryId { get; set; }
+        [JsonIgnore]
         public Country? Country { get; set; }
         [Url]
         [StringLength(300)]

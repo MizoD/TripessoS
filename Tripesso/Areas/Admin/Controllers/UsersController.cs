@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Models;
 using Models.DTOs.Request.UserRequest;
 using Models.DTOs.Response.UserResponse;
 
@@ -10,33 +9,32 @@ namespace Tripesso.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = $"{SD.SuperAdmin},{SD.Admin}")]
-    [Route("admin/[area]/[controller]")]
+    [Route("api/[area]/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IUnitOfWork unitOfWork;
 
-        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public UsersController(IUnitOfWork unitOfWork)
         {
-            _userManager = userManager;
-            _roleManager = roleManager;
+            this.unitOfWork = unitOfWork;
         }
 
-        // ✅ GET: admin/users?page=1&pageSize=10
-        [HttpGet]
-        public async Task<IActionResult> GetAllUsers(int page = 1, int pageSize = 10)
+        
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll(int page = 1)
         {
-            var query = _userManager.Users.AsQueryable();
+            var query = unitOfWork.UserManager.Users.AsQueryable();
 
             var totalUsers = await query.CountAsync();
+            int pageSize = 10;
             var users = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             var userResponses = new List<UserResponse>();
 
             foreach (var user in users)
             {
-                var roles = await _userManager.GetRolesAsync(user);
+                var roles = await unitOfWork.UserManager.GetRolesAsync(user);
                 userResponses.Add(new UserResponse
                 {
                     Id = user.Id,
@@ -61,15 +59,14 @@ namespace Tripesso.Areas.Admin.Controllers
             return Ok(response);
         }
 
-        // ✅ GET: admin/users/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserById(string id)
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> Details(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await unitOfWork.UserManager.FindByIdAsync(id);
 
             if (user == null) return NotFound("User not found");
 
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles = await unitOfWork.UserManager.GetRolesAsync(user);
 
             var response = new UserResponse
             {
@@ -85,12 +82,9 @@ namespace Tripesso.Areas.Admin.Controllers
             return Ok(response);
         }
 
-        // ✅ POST: admin/users
-        [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
+        [HttpPost("Create")]
+        public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
             var user = new ApplicationUser
             {
                 FirstName = request.FirstName,
@@ -98,27 +92,26 @@ namespace Tripesso.Areas.Admin.Controllers
                 UserName = request.UserName,
                 Email = request.Email,
                 Address = request.Address,
-                RegistraionDate = DateTime.UtcNow,
+                RegistrationDate = DateTime.UtcNow,
                 LastLogin = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user, request.Password);
+            var result = await unitOfWork.UserManager.CreateAsync(user, request.Password);
 
             if (!result.Succeeded) return BadRequest(result.Errors);
 
-            if (!await _roleManager.RoleExistsAsync(request.Role))
+            if (!await unitOfWork.RoleManager.RoleExistsAsync(request.Role))
                 return BadRequest("Invalid role");
 
-            await _userManager.AddToRoleAsync(user, request.Role);
+            await unitOfWork.UserManager.AddToRoleAsync(user, request.Role);
 
             return Ok(new { message = "User created successfully", userId = user.Id });
         }
 
-        // ✅ PUT: admin/users
-        [HttpPut]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequest request)
+        [HttpPut("Update")]
+        public async Task<IActionResult> Update([FromBody] UpdateUserRequest request)
         {
-            var user = await _userManager.FindByIdAsync(request.Id);
+            var user = await unitOfWork.UserManager.FindByIdAsync(request.Id);
 
             if (user == null) return NotFound("User not found");
 
@@ -128,54 +121,52 @@ namespace Tripesso.Areas.Admin.Controllers
             user.Email = request.Email;
             user.Address = request.Address;
 
-            await _userManager.UpdateAsync(user);
+            var updated = await unitOfWork.UserManager.UpdateAsync(user);
+            if (!updated.Succeeded) return BadRequest(updated.Errors);
 
-            var userRoles = await _userManager.GetRolesAsync(user);
-            await _userManager.RemoveFromRolesAsync(user, userRoles);
-            await _userManager.AddToRolesAsync(user, request.Roles);
+            var userRoles = await unitOfWork.UserManager.GetRolesAsync(user);
+            await unitOfWork.UserManager.RemoveFromRolesAsync(user, userRoles);
+            await unitOfWork.UserManager.AddToRolesAsync(user, request.Roles);
 
             return Ok(new { message = "User updated successfully" });
         }
 
-        // ✅ DELETE: admin/users/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(string id)
+        [HttpDelete("Delete/{id}")]
+        public async Task<IActionResult> Delete(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await unitOfWork.UserManager.FindByIdAsync(id);
 
             if (user == null) return NotFound("User not found");
 
-            await _userManager.DeleteAsync(user);
+            var deleted =  await unitOfWork.UserManager.DeleteAsync(user);
+            if (!deleted.Succeeded) return BadRequest(deleted.Errors);
 
             return Ok(new { message = "User deleted successfully" });
         }
 
-        // ✅ POST: admin/users/block/{id}
-        [HttpPost("block/{id}")]
-        public async Task<IActionResult> BlockUser(string id)
+        [HttpPost("Block/{id}")]
+        public async Task<IActionResult> Block(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await unitOfWork.UserManager.FindByIdAsync(id);
 
-            if (user == null) return NotFound("User not found");
+            if (user is not null)
+            {
+                if (user.LockoutEnabled)
+                {
+                    user.LockoutEnabled = false;
+                    user.LockoutEnd = DateTime.UtcNow.AddMonths(1000);
+                }
+                else
+                {
+                    user.LockoutEnabled = true;
+                    user.LockoutEnd = null;
+                }
 
-            user.LockoutEnd = DateTime.UtcNow.AddYears(100); // block "forever"
-            await _userManager.UpdateAsync(user);
+                var blocked =  await unitOfWork.UserManager.UpdateAsync(user);
+                if (!blocked.Succeeded) return BadRequest();
+            }
 
-            return Ok(new { message = "User blocked successfully" });
-        }
-
-        // ✅ POST: admin/users/unblock/{id}
-        [HttpPost("unblock/{id}")]
-        public async Task<IActionResult> UnblockUser(string id)
-        {
-            var user = await _userManager.FindByIdAsync(id);
-
-            if (user == null) return NotFound("User not found");
-
-            user.LockoutEnd = null;
-            await _userManager.UpdateAsync(user);
-
-            return Ok(new { message = "User unblocked successfully" });
+            return NotFound();
         }
     }
 }

@@ -6,7 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Tripesso.Areas.Identity
+namespace Tripesso.Areas.Identity.Controllers
 {
     [Route("api/[area]/[controller]")]
     [Area("Identity")]
@@ -30,13 +30,13 @@ namespace Tripesso.Areas.Identity
 
             if (result.Succeeded)
             {
-                user.RegistraionDate = DateTime.UtcNow;
+                user.RegistrationDate = DateTime.UtcNow;
                 await unitOfWork.CommitAsync();
                 await unitOfWork.UserManager.AddToRoleAsync(user, SD.Customer);
 
                 // Send Confirmation Email
                 var token = await unitOfWork.UserManager.GenerateEmailConfirmationTokenAsync(user);
-                var link = Url.Action("ConfirmEmail", "Accounts", new { userId = user.Id, token = token, area = "Identity" }, Request.Scheme);
+                var link = Url.Action("ConfirmEmail", "Accounts", new { userId = user.Id, token, area = "Identity" }, Request.Scheme);
 
                 await emailSender.SendEmailAsync(user!.Email ?? "", "Confirm Your Account's Email", @$"
                         <div style=""font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px; text-align: center;"">
@@ -74,7 +74,7 @@ namespace Tripesso.Areas.Identity
             }
             else
             {
-                return BadRequest($"{String.Join(",", result.Errors)}");
+                return BadRequest($"{string.Join(",", result.Errors)}");
             }
         }
 
@@ -106,7 +106,7 @@ namespace Tripesso.Areas.Identity
                         new Claim(ClaimTypes.NameIdentifier, user.Id),
                         new Claim(ClaimTypes.Name, user.UserName!),
                         new Claim(ClaimTypes.Email, user.Email!),
-                        new Claim(ClaimTypes.Role, String.Join(" ", roles))
+                        new Claim(ClaimTypes.Role, string.Join(" ", roles))
                 };
 
                 var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("TourismAPIForGradProject1stPTourismAPIForGradProject1stP"));
@@ -239,7 +239,7 @@ namespace Tripesso.Areas.Identity
 
             // Send Confirmation Email
             var token = await unitOfWork.UserManager.GenerateEmailConfirmationTokenAsync(user);
-            var link = Url.Action(nameof(ConfirmEmail), "Accounts", new { userId = user.Id, token = token, area = "Identity" }, Request.Scheme);
+            var link = Url.Action(nameof(ConfirmEmail), "Accounts", new { userId = user.Id, token, area = "Identity" }, Request.Scheme);
 
             await emailSender.SendEmailAsync(user!.Email ?? "", "Confirm Your Account's Email", @$"
                         <div style=""font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px; text-align: center;"">
@@ -273,7 +273,7 @@ namespace Tripesso.Areas.Identity
             // Send OTP Email
             var otpNumber = new Random().Next(0, 999999).ToString("D6");
 
-            var totalNumberOfOTPs = (await unitOfWork.ApplicationUserOTPRepository.GetAsync(e => e.ApplicationUserId == user.Id && DateTime.UtcNow.Day == e.SendDate.Day));
+            var totalNumberOfOTPs = await unitOfWork.ApplicationUserOTPRepository.GetAsync(e => e.ApplicationUserId == user.Id && DateTime.UtcNow.Day == e.SendDate.Day);
 
             if (totalNumberOfOTPs.Count() > 5)
             {
@@ -283,7 +283,7 @@ namespace Tripesso.Areas.Identity
             await unitOfWork.ApplicationUserOTPRepository.CreateAsync(new()
             {
                 ApplicationUserId = user.Id,
-                OTPNumber = otpNumber,
+                Code = otpNumber,
                 Reason = "ForgetPassword",
                 SendDate = DateTime.UtcNow,
                 Status = false,
@@ -322,7 +322,7 @@ namespace Tripesso.Areas.Identity
 
             if (lastOTP is not null)
             {
-                if (lastOTP.OTPNumber == resetPasswordRequest.OTP && (lastOTP.ValidTo - DateTime.UtcNow).TotalMinutes < 30 && !lastOTP.Status)
+                if (lastOTP.Code == resetPasswordRequest.OTP && (lastOTP.ValidTo - DateTime.UtcNow).TotalMinutes < 30 && !lastOTP.Status)
                 {
                     var token = await unitOfWork.UserManager.GeneratePasswordResetTokenAsync(user);
                     var result = await unitOfWork.UserManager.ResetPasswordAsync(user, token, resetPasswordRequest.Password);
@@ -335,7 +335,7 @@ namespace Tripesso.Areas.Identity
                     }
                     else
                     {
-                        return BadRequest($"{String.Join(",", result.Errors)}");
+                        return BadRequest($"{string.Join(",", result.Errors)}");
                     }
                 }
             }

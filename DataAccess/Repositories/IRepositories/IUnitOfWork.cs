@@ -24,6 +24,7 @@ namespace DataAccess.Repositories.IRepositories
         IFlightWishlistRepository FlightWishlistRepository { get; }
         UserManager<ApplicationUser> UserManager { get; }
         SignInManager<ApplicationUser> SignInManager { get; }
+        RoleManager<IdentityRole> RoleManager { get; }
         Task<bool> CommitAsync();
     }
 }

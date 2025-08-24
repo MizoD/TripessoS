@@ -9,30 +9,30 @@ namespace Tripesso.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = $"{SD.SuperAdmin},{SD.Admin}")]
-    [Route("admin/[area]/[controller]")]
+    [Route("api/[area]/[controller]")]
     [ApiController]
     public class TripsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork unitOfWork;
 
-        public TripsController(ApplicationDbContext context)
+        public TripsController(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            this.unitOfWork = unitOfWork;
         }
 
         [HttpGet("GetAll")]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAll(int page = 1)
         {
-            var query = _context.Trips
-                .Include(t => t.Country)
-                .Include(t => t.Reviews);
+            var trips = await unitOfWork.TripRepository.GetAsync(includes: t=> t.Include(t=> t.Country).Include(t=> t.Bookings)
+                                .Include(t=> t.Flights).Include(t=> t.Hotels).Include(t=> t.Reviews));
 
-            var totalTrips = await query.CountAsync();
+            var totalTrips = trips.Count();
+            int pageSize = 10;
 
-            var trips = await query
+            trips = trips
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToListAsync();
+                .ToList();
 
             var response = trips.Select(t => new TripResponse
             {
@@ -69,13 +69,11 @@ namespace Tripesso.Areas.Admin.Controllers
             });
         }
 
-        [HttpGet("GetById/{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [HttpGet("GetOne/{id}")]
+        public async Task<IActionResult> GetOne(int id)
         {
-            var trip = await _context.Trips
-                .Include(t => t.Country)
-                .Include(t => t.Reviews)
-                .FirstOrDefaultAsync(t => t.Id == id);
+            var trip = await unitOfWork.TripRepository.GetOneAsync(t=> t.Id == id,includes: t => t.Include(t => t.Country).Include(t => t.Bookings)
+                                .Include(t => t.Flights).Include(t => t.Hotels).Include(t => t.Reviews));
 
             if (trip == null)
                 return NotFound("Trip not found");
@@ -108,9 +106,6 @@ namespace Tripesso.Areas.Admin.Controllers
         [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] CreateTripRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var trip = new Trip
             {
                 Title = request.Title,
@@ -129,19 +124,18 @@ namespace Tripesso.Areas.Admin.Controllers
                 Rate = 0
             };
 
-            _context.Trips.Add(trip);
-            await _context.SaveChangesAsync();
+            var created = await unitOfWork.TripRepository.CreateAsync(trip);
+            if (!created)
+                return BadRequest("Failed to create trip");
 
             return Ok(new { message = "✅ Trip created successfully!", tripId = trip.Id });
         }
 
-        [HttpPut("Update/{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateTripRequest request)
+        [HttpPut("Update")]
+        public async Task<IActionResult> Update([FromBody] UpdateTripRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var trip = await _context.Trips.FindAsync(id);
+            var trip = await unitOfWork.TripRepository.GetOneAsync(t => t.Id == request.Id, includes: t => t.Include(t => t.Country).Include(t => t.Bookings)
+                                .Include(t => t.Flights).Include(t => t.Hotels).Include(t => t.Reviews));
             if (trip == null)
                 return NotFound("Trip not found");
 
@@ -159,8 +153,9 @@ namespace Tripesso.Areas.Admin.Controllers
             trip.SecondryImages = request.SecondaryImages;
             trip.VideoUrl = request.VideoUrl;
 
-            _context.Trips.Update(trip);
-            await _context.SaveChangesAsync();
+            var updated = await unitOfWork.TripRepository.UpdateAsync(trip);
+            if (!updated)
+                return BadRequest("Failed to update trip");
 
             return Ok(new { message = "✏️ Trip updated successfully!" });
         }
@@ -168,12 +163,13 @@ namespace Tripesso.Areas.Admin.Controllers
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var trip = await _context.Trips.FindAsync(id);
+            var trip = await unitOfWork.TripRepository.GetOneAsync(t => t.Id == id);
             if (trip == null)
                 return NotFound("Trip not found");
 
-            _context.Trips.Remove(trip);
-            await _context.SaveChangesAsync();
+            var deleted = await unitOfWork.TripRepository.DeleteAsync(trip);  
+            if (!deleted)
+                return BadRequest("Failed to delete trip");
 
             return Ok(new { message = "🗑️ Trip deleted successfully!" });
         }

@@ -52,7 +52,7 @@ namespace DataAccess
 
             builder.Entity<Flight>()
                 .HasOne(f => f.DepartureAirport)
-                .WithMany(a => a.DepratureFlights)
+                .WithMany(a => a.DepartureFlights)
                 .HasForeignKey(f => f.DepartureAirportId)
                 .OnDelete(DeleteBehavior.NoAction);
 

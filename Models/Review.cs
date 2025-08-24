@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Models
 {
@@ -8,8 +9,10 @@ namespace Models
 
         [Required]
         public string UserId { get; set; } = null!;
+        [JsonIgnore]
         public ApplicationUser User { get; set; } = null!;
         public int TripId { get; set; }
+        [JsonIgnore]
         public Trip Trip { get; set; } = null!;
 
         [Required, Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]

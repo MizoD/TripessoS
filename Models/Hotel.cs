@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Models
 {
@@ -22,8 +23,10 @@ namespace Models
         public int Traffic { get; set; }
         [Required]
         public int CountryId { get; set; }
+        [JsonIgnore]
         public Country Country { get; set; } = null!;
         public int? TripId { get; set; }
+        [JsonIgnore]
         public Trip? Trip { get; set; }
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }

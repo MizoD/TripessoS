@@ -4,7 +4,7 @@ using Models.DTOs.Request.HotelRequest;
 using Models.DTOs.Response.HotelResponse;
 using System.Security.Claims;
 
-namespace Tripesso.Areas.Customer
+namespace Tripesso.Areas.Customer.Controllers
 {
     [Route("api/[area]/[controller]")]
     [Area("Customer")]
@@ -19,7 +19,7 @@ namespace Tripesso.Areas.Customer
             this.unitOfWork = unitOfWork;
         }
 
-        [HttpGet]
+        [HttpGet("GetFlights")]
         public async Task<IActionResult> GetFlights([FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 6,
             [FromQuery] string sortBy = "price",
@@ -28,7 +28,7 @@ namespace Tripesso.Areas.Customer
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 6;
 
-            var flights = await unitOfWork.FlightRepository.GetAllAsync(includes: f=> f.Include(f=> f.Aircraft).Include(f=> f.ArrivalAirport)
+            var flights = await unitOfWork.FlightRepository.GetAsync(includes: f=> f.Include(f=> f.Aircraft).Include(f=> f.ArrivalAirport)
                             .Include(f=> f.DepartureAirport).Include(f=> f.Trip).Include(f=> f.Bookings).Include(f=> f.Seats));
 
             // Sorting
@@ -170,7 +170,7 @@ namespace Tripesso.Areas.Customer
     [FromQuery] string sortBy = "price",
     [FromQuery] string sortOrder = "asc")
         {
-            var flights = await unitOfWork.FlightRepository.GetAllAsync(f =>
+            var flights = await unitOfWork.FlightRepository.GetAsync(f =>
                     f.AvailableSeats >= request.NumberOfPassengers &&
                     f.DepartureTime > DateTime.UtcNow &&
                     f.Status == FlightStatus.Scheduled &&

@@ -8,25 +8,21 @@ namespace Tripesso.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = $"{SD.SuperAdmin},{SD.Admin}")]
-    [Route("admin/[area]/[controller]")]
+    [Route("api/[area]/[controller]")]
     [ApiController]
     public class ReviewsController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork unitOfWork;
 
-        public ReviewsController(ApplicationDbContext context)
+        public ReviewsController(IUnitOfWork unitOfWork)
         {
-            _context = context;
+            this.unitOfWork = unitOfWork;
         }
 
-        // ✅ GET: admin/reviews
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
-            var reviews = await _context.Reviews
-                .Include(r => r.User)
-                .Include(r => r.Trip)
-                .ToListAsync();
+            var reviews = await unitOfWork.ReviewRepository.GetAsync(includes: r=> r.Include(r=> r.User).Include(r=> r.Trip));
 
             var reviewResponses = reviews.Select(r => new UserReviewResponse
             {
@@ -43,15 +39,11 @@ namespace Tripesso.Areas.Admin.Controllers
             return Ok(reviewResponses);
         }
 
-        // ✅ POST: admin/reviews
-        [HttpPost]
+        [HttpPost("Create")]
         public async Task<IActionResult> Create([FromBody] CreateUserReviewRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             if (request.TripId <= 0)
-                return BadRequest("Review must be linked to either a Trip or a Hotel.");
+                return BadRequest("Review must be linked to either a Trip.");
 
             if (request.Rating < 1 || request.Rating > 5)
                 return BadRequest("Rating must be between 1 and 5.");
@@ -65,33 +57,29 @@ namespace Tripesso.Areas.Admin.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Reviews.Add(review);
-            await _context.SaveChangesAsync();
+            var created = await unitOfWork.ReviewRepository.CreateAsync(review);
+            if (!created) return StatusCode(500, "An error occurred while creating the review.");
 
-            // رجع DTO كامل
             var response = new UserReviewResponse
             {
                 Id = review.Id,
                 UserId = review.UserId!,
-                UserName = (await _context.Users.FindAsync(review.UserId))?.UserName ?? "",
+                UserName = (await unitOfWork.UserManager.FindByIdAsync(review.UserId))?.UserName ?? "",
                 TripId = review.TripId,
-                TripName = (await _context.Trips.FindAsync(review.TripId))?.Title ?? " ",
+                TripName = (await unitOfWork.TripRepository.GetOneAsync(t=> t.Id == review.TripId))?.Title ?? " ",
                 Rating = review.Rating,
                 Comment = review.Comment,
                 CreatedAt = review.CreatedAt
             };
 
-            return Ok(response);
+            return Ok(new {Message = "Review Created Successfully!", response });
         }
 
-        // ✅ PUT: admin/reviews/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CreateUserReviewRequest request)
+        
+        [HttpPut("Update")]
+        public async Task<IActionResult> Update([FromBody] CreateUserReviewRequest request)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await unitOfWork.ReviewRepository.GetOneAsync(r=> r.Id == request.Id);
             if (review == null) return NotFound("Review not found");
 
             if (request.Rating < 1 || request.Rating > 5)
@@ -100,34 +88,34 @@ namespace Tripesso.Areas.Admin.Controllers
             review.Rating = request.Rating;
             review.Comment = request.Comment;
             review.TripId = request.TripId;
+            review.UserId = request.UserId;
 
-            _context.Reviews.Update(review);
-            await _context.SaveChangesAsync();
+            var updated = await unitOfWork.ReviewRepository.UpdateAsync(review);
+            if (!updated) return StatusCode(500, "An error occurred while updating the review.");
 
             var response = new UserReviewResponse
             {
                 Id = review.Id,
                 UserId = review.UserId!,
-                UserName = (await _context.Users.FindAsync(review.UserId))?.UserName ?? "",
+                UserName = (await unitOfWork.UserManager.FindByIdAsync(review.UserId))?.UserName ?? "",
                 TripId = review.TripId,
-                TripName = (await _context.Trips.FindAsync(review.TripId))?.Title?? " ",
+                TripName = (await unitOfWork.TripRepository.GetOneAsync(t => t.Id == review.TripId))?.Title ?? " ",
                 Rating = review.Rating,
                 Comment = review.Comment,
                 CreatedAt = review.CreatedAt
             };
 
-            return Ok(response);
+            return Ok(new {Message = "Review Updated Successfully"});
         }
 
-        // ✅ DELETE: admin/reviews/{id}
-        [HttpDelete("{id}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var review = await _context.Reviews.FindAsync(id);
+            var review = await unitOfWork.ReviewRepository.GetOneAsync(t => t.Id == id);
             if (review == null) return NotFound("Review not found");
 
-            _context.Reviews.Remove(review);
-            await _context.SaveChangesAsync();
+            var deleted = await unitOfWork.ReviewRepository.DeleteAsync(review);
+            if (!deleted) return StatusCode(500, "An error occurred while deleting the review.");
 
             return Ok(new { message = "Review deleted successfully" });
         }

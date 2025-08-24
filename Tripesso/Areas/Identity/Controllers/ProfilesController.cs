@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata;
 using System.Security.Claims;
 
-namespace BookStore.Areas.Identity.Controllers
+namespace Tripesso.Areas.Identity.Controllers
 {
     [Route("api/[area]/[controller]")]
     [Area("Identity")]
@@ -140,7 +140,7 @@ namespace BookStore.Areas.Identity.Controllers
             }
         }
 
-        [HttpGet("DashBoard")]
+        [HttpGet("Dashboard")]
         public async Task<IActionResult> Dashboard()
         {
             var user = await unitOfWork.UserManager.GetUserAsync(User);
@@ -151,18 +151,18 @@ namespace BookStore.Areas.Identity.Controllers
             }
             if (user is null) return Unauthorized("Can't Found Such a user!");
 
-            var bookingsCount = (await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id)).Count(); 
+            var bookingsCount = (await unitOfWork.BookingRepository.GetAsync(b=> b.UserId == user.Id)).Count(); 
 
-            var hotelWishlistCount = (await unitOfWork.HotelWishlistRepository.GetAllAsync(h=> h.UserId == user.Id)).Count();
-            var tripWishlistCount = (await unitOfWork.TripWishlistRepository.GetAllAsync(h => h.UserId == user.Id)).Count();
-            var flightWishlistCount = (await unitOfWork.FlightWishlistRepository.GetAllAsync(h => h.UserId == user.Id)).Count();
+            var hotelWishlistCount = (await unitOfWork.HotelWishlistRepository.GetAsync(h=> h.UserId == user.Id)).Count();
+            var tripWishlistCount = (await unitOfWork.TripWishlistRepository.GetAsync(h => h.UserId == user.Id)).Count();
+            var flightWishlistCount = (await unitOfWork.FlightWishlistRepository.GetAsync(h => h.UserId == user.Id)).Count();
 
             var allwishlistCount = hotelWishlistCount + tripWishlistCount + flightWishlistCount;
             
-            var flightsBookedCount = (await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id && b.FlightId > 0)).Count();
-            var userReviewsCount = (await unitOfWork.ReviewRepository.GetAllAsync(r=> r.UserId == user.Id)).Count();
+            var flightsBookedCount = (await unitOfWork.BookingRepository.GetAsync(b=> b.UserId == user.Id && b.FlightId > 0)).Count();
+            var userReviewsCount = (await unitOfWork.ReviewRepository.GetAsync(r=> r.UserId == user.Id)).Count();
 
-            var bookings = await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id);
+            var bookings = await unitOfWork.BookingRepository.GetAsync(b=> b.UserId == user.Id);
 
             return Ok(new
             {
@@ -186,7 +186,7 @@ namespace BookStore.Areas.Identity.Controllers
             }
             if (user is null) return Unauthorized("Can't Found Such a user!");
 
-            var myBookings = await unitOfWork.BookingRepository.GetAllAsync(b=> b.UserId == user.Id);
+            var myBookings = await unitOfWork.BookingRepository.GetAsync(b=> b.UserId == user.Id);
             if (myBookings == null) return Ok("There is no Bookings yet!");
 
             return Ok(myBookings);
@@ -203,7 +203,7 @@ namespace BookStore.Areas.Identity.Controllers
             }
             if (user is null) return Unauthorized("Can't Found Such a user!");
 
-            var myReviews = await unitOfWork.ReviewRepository.GetAllAsync(r=> r.UserId == user.Id);
+            var myReviews = await unitOfWork.ReviewRepository.GetAsync(r=> r.UserId == user.Id);
             if (myReviews == null) return Ok("There is no Reviews yet!");
 
             return Ok(myReviews);
@@ -220,11 +220,11 @@ namespace BookStore.Areas.Identity.Controllers
             }
             if (user is null) return Unauthorized("Can't Found Such a user!");
 
-            var myTripsWishlist = await unitOfWork.TripWishlistRepository.GetAllAsync(t=> t.UserId == user.Id);
+            var myTripsWishlist = await unitOfWork.TripWishlistRepository.GetAsync(t=> t.UserId == user.Id);
 
-            var myFlightsWishlist = await unitOfWork.FlightWishlistRepository.GetAllAsync(f=> f.UserId == user.Id);
+            var myFlightsWishlist = await unitOfWork.FlightWishlistRepository.GetAsync(f=> f.UserId == user.Id);
 
-            var myHotelsWishlist = await unitOfWork.HotelWishlistRepository.GetAllAsync(h=> h.UserId == user.Id);
+            var myHotelsWishlist = await unitOfWork.HotelWishlistRepository.GetAsync(h=> h.UserId == user.Id);
 
             if (myTripsWishlist == null && myFlightsWishlist == null && myHotelsWishlist == null) return Ok("There is no Wishlists yet!");
 
@@ -235,16 +235,6 @@ namespace BookStore.Areas.Identity.Controllers
                 MyFlightsWishlist = myFlightsWishlist,
                 MyHotelsWishlist = myHotelsWishlist
             });
-        }
-
-
-        [HttpGet("Logout")]
-        public async Task<IActionResult> LogoutAsync() {
-
-            await unitOfWork.SignInManager.SignOutAsync();
-
-            return Ok("User Logged Out Successfully!");
-
         }
     }
 }

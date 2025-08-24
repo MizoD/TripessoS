@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Models
 {
@@ -36,16 +37,20 @@ namespace Models
 
         [Required(ErrorMessage = "Departure airport is required")]
         public int DepartureAirportId { get; set; }
+        [JsonIgnore]
         public Airport DepartureAirport { get; set; } = null!;
 
         [Required(ErrorMessage = "Arrival airport is required")]
         public int ArrivalAirportId { get; set; }
+        [JsonIgnore]
         public Airport ArrivalAirport { get; set; } = null!;
 
         [Required(ErrorMessage = "Aircraft is required")]
         public int AirCraftId { get; set; }
+        [JsonIgnore]
         public AirCraft Aircraft { get; set; } = null!;
         public int? TripId { get; set; }
+        [JsonIgnore]
         public Trip? Trip { get; set; }
 
         public ICollection<Seat> Seats { get; set; } = new List<Seat>();

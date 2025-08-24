@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace Tripesso.Areas.Customer
+namespace Tripesso.Areas.Customer.Controllers
 {
     [Route("api/[area]/[controller]")]
     [Area("Customer")]
@@ -16,15 +16,16 @@ namespace Tripesso.Areas.Customer
         {
             this.unitOfWork = unitOfWork;
         }
+        [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
-            var airportsName = (await unitOfWork.AirportRepository.GetAllAsync()).Select(a=> a.Name);
-            var hotelsName = (await unitOfWork.HotelRepository.GetAllAsync()).Select(h=>  h.Name);
+            var airportsName = (await unitOfWork.AirportRepository.GetAsync()).Select(a=> a.Name);
+            var hotelsName = (await unitOfWork.HotelRepository.GetAsync()).Select(h=>  h.Name);
 
             //var roundTrips = (await unitOfWork.FlightRepository.GetAllAsync(f=> f.))
             
-            var reviews = (await unitOfWork.ReviewRepository.GetAllAsync()).OrderByDescending(r=> r.CreatedAt);
-            var hotels = (await unitOfWork.HotelRepository.GetAllAsync()).OrderByDescending(h => h.Traffic);   
+            var reviews = (await unitOfWork.ReviewRepository.GetAsync()).OrderByDescending(r=> r.CreatedAt);
+            var hotels = (await unitOfWork.HotelRepository.GetAsync()).OrderByDescending(h => h.Traffic);   
 
             return Ok(new
             {

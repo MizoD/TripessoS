@@ -4,6 +4,7 @@ namespace Models.DTOs.Request.HotelRequest
 {
     public class UpdateHotelRequest
     {
+        public int Id { get; set; }
         [Required]
         [StringLength(100)]
         public string Name { get; set; } = null!;

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Models
 {
@@ -15,6 +16,7 @@ namespace Models
         public string AirlineName { get; set; } = string.Empty;
         public AirCraftType Type { get; set; }
         public int AirportId { get; set; }
+        [JsonIgnore]
         public Airport Airport { get; set; } = null!;
         public List<Seat> Seats { get; set; } = new List<Seat>();
     }

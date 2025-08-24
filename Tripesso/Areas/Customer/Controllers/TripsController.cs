@@ -231,8 +231,8 @@ namespace Tripesso.Areas.Customer.Controllers
         [FromQuery] string sortBy = "price",
         [FromQuery] string sortOrder = "asc")
         {
-            var trips = await unitOfWork.TripRepository.GetAllAsync(
-                filter: t =>
+            var trips = await unitOfWork.TripRepository.GetAsync(
+                    t =>
                     t.IsAvailable &&
                     t.AvailableSeats >= request.NumberOfPassengers &&
                     t.Country != null &&

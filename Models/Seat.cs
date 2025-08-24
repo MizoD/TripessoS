@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Models
 {
@@ -20,6 +21,7 @@ namespace Models
 
         [Required(ErrorMessage = "Flight is required")]
         public int FlightId { get; set; }
+        [JsonIgnore]
         public Flight Flight { get; set; } = null!;
 
         [NotMapped]

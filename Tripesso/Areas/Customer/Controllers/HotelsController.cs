@@ -4,7 +4,7 @@ using Models.DTOs.Request.HotelRequest;
 using Models.DTOs.Response.HotelResponse;
 using System.Security.Claims;
 
-namespace Tripesso.Areas.Customer
+namespace Tripesso.Areas.Customer.Controllers
 {
     [Route("api/[area]/[controller]")]
     [Area("Customer")]
@@ -19,7 +19,7 @@ namespace Tripesso.Areas.Customer
             this.unitOfWork = unitOfWork;
         }
 
-        [HttpGet]
+        [HttpGet("GetHotels")]
         public async Task<IActionResult> GetHotels([FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 6,
             [FromQuery] string sortBy = "price",
@@ -28,7 +28,7 @@ namespace Tripesso.Areas.Customer
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 6;
 
-            var hotels = await unitOfWork.HotelRepository.GetAllAsync(includes: h=> h.Include(h => h.Country).Include(h => h.Trip).Include(h => h.Bookings));
+            var hotels = await unitOfWork.HotelRepository.GetAsync(includes: h=> h.Include(h => h.Country).Include(h => h.Trip).Include(h => h.Bookings));
 
             // Sorting
             hotels = (sortBy.ToLower(), sortOrder.ToLower()) switch
@@ -91,7 +91,7 @@ namespace Tripesso.Areas.Customer
             if (hotel == null)
                 return NotFound("Hotel not found.");
 
-            if (hotel.AvilableRooms < numberOfGuests)
+            if (hotel.AvailableRooms < numberOfGuests)
                 return BadRequest("Not enough available Rooms.");
 
             // Checks if the hotel is already in the user's cart
@@ -220,8 +220,8 @@ namespace Tripesso.Areas.Customer
     [FromQuery] string sortBy = "price",
     [FromQuery] string sortOrder = "asc")
         {
-            var hotels = await unitOfWork.HotelRepository.GetAllAsync(h=> 
-                    h.AvilableRooms >= request.NumberOfGuests &&
+            var hotels = await unitOfWork.HotelRepository.GetAsync(h=> 
+                    h.AvailableRooms >= request.NumberOfGuests &&
                     h.Country.Name.ToLower().Contains(request.Country?? "".ToLower()),
                 includes: h => h
                     .Include(h => h.Country).Include(h => h.Trip).Include(h=> h.Bookings)
