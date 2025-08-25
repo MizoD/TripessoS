@@ -102,6 +102,8 @@ namespace Tripesso
                 });
             });
 
+            Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
             var app = builder.Build();
 
             app.UseStaticFiles();
